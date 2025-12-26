@@ -2,8 +2,8 @@
 
 ## 概述
 
-链上数据索引是 DeFi 套利的重要基础设施。高效的数据索引能够帮助发现套利机会、分析历史表现、监控市场状态。本文深入讲解 The
-Graph、Dune Analytics 等数据索引方案的集成与使用。
+链上数据索引是DeFi套利的重要基础设施。高效的数据索引能够帮助发现套利机会、分析历史表现、监控市场状态。本文深入讲解The
+Graph、Dune Analytics等数据索引方案的集成与使用。
 
 ## 1. The Graph 协议集成
 
@@ -145,52 +145,52 @@ func (c *GraphQLClient) buildCacheKey(query string, variables map[string]interfa
 ```go
 // UniswapV3Subgraph Uniswap V3 数据查询
 type UniswapV3Subgraph struct {
-client *GraphQLClient
+    client *GraphQLClient
 }
 
 // Pool 池子信息
 type Pool struct {
-ID                 string   `json:"id"`
-Token0             Token    `json:"token0"`
-Token1             Token    `json:"token1"`
-FeeTier            string   `json:"feeTier"`
-Liquidity          string   `json:"liquidity"`
-SqrtPrice          string   `json:"sqrtPrice"`
-Tick               string   `json:"tick"`
-Token0Price        string   `json:"token0Price"`
-Token1Price        string   `json:"token1Price"`
-VolumeUSD          string   `json:"volumeUSD"`
-TotalValueLockedUSD string  `json:"totalValueLockedUSD"`
+    ID                 string   `json:"id"`
+    Token0             Token    `json:"token0"`
+    Token1             Token    `json:"token1"`
+    FeeTier            string   `json:"feeTier"`
+    Liquidity          string   `json:"liquidity"`
+    SqrtPrice          string   `json:"sqrtPrice"`
+    Tick               string   `json:"tick"`
+    Token0Price        string   `json:"token0Price"`
+    Token1Price        string   `json:"token1Price"`
+    VolumeUSD          string   `json:"volumeUSD"`
+    TotalValueLockedUSD string  `json:"totalValueLockedUSD"`
 }
 
 // Token 代币信息
 type Token struct {
-ID       string `json:"id"`
-Symbol   string `json:"symbol"`
-Name     string `json:"name"`
-Decimals string `json:"decimals"`
+    ID       string `json:"id"`
+    Symbol   string `json:"symbol"`
+    Name     string `json:"name"`
+    Decimals string `json:"decimals"`
 }
 
 // Swap 交换记录
 type Swap struct {
-ID          string `json:"id"`
-Timestamp   string `json:"timestamp"`
-Pool        Pool   `json:"pool"`
-Sender      string `json:"sender"`
-Recipient   string `json:"recipient"`
-Amount0     string `json:"amount0"`
-Amount1     string `json:"amount1"`
-AmountUSD   string `json:"amountUSD"`
-SqrtPriceX96 string `json:"sqrtPriceX96"`
-Tick        string `json:"tick"`
-LogIndex    string `json:"logIndex"`
+    ID          string `json:"id"`
+    Timestamp   string `json:"timestamp"`
+    Pool        Pool   `json:"pool"`
+    Sender      string `json:"sender"`
+    Recipient   string `json:"recipient"`
+    Amount0     string `json:"amount0"`
+    Amount1     string `json:"amount1"`
+    AmountUSD   string `json:"amountUSD"`
+    SqrtPriceX96 string `json:"sqrtPriceX96"`
+    Tick        string `json:"tick"`
+    LogIndex    string `json:"logIndex"`
 }
 
 // NewUniswapV3Subgraph 创建 Uniswap V3 查询器
 func NewUniswapV3Subgraph(endpoint, apiKey string) *UniswapV3Subgraph {
-return &UniswapV3Subgraph{
-client: NewGraphQLClient(endpoint, apiKey),
-}
+    return &UniswapV3Subgraph{
+        client: NewGraphQLClient(endpoint, apiKey),
+    }
 }
 
 // GetTopPools 获取 TVL 最高的池子
@@ -233,7 +233,7 @@ variables := map[string]interface{}{
 }
 
 var result struct {
-Pools []Pool `json:"pools"`
+    Pools []Pool `json:"pools"`
 }
 
 if err := s.client.Query(ctx, query, variables, &result); err != nil {
@@ -245,165 +245,165 @@ return result.Pools, nil
 
 // GetPoolsByTokenPair 根据代币对获取池子
 func (s *UniswapV3Subgraph) GetPoolsByTokenPair(ctx context.Context, token0, token1 string) ([]Pool, error) {
-query := `
-        query GetPoolsByTokenPair($token0: String!, $token1: String!) {
-            pools(
-                where: {
-                    or: [
-                        { token0: $token0, token1: $token1 },
-                        { token0: $token1, token1: $token0 }
-                    ]
-                }
-            ) {
-                id
-                token0 {
+    query := `
+            query GetPoolsByTokenPair($token0: String!, $token1: String!) {
+                pools(
+                    where: {
+                        or: [
+                            { token0: $token0, token1: $token1 },
+                            { token0: $token1, token1: $token0 }
+                        ]
+                    }
+                ) {
                     id
-                    symbol
-                    decimals
+                    token0 {
+                        id
+                        symbol
+                        decimals
+                    }
+                    token1 {
+                        id
+                        symbol
+                        decimals
+                    }
+                    feeTier
+                    liquidity
+                    sqrtPrice
+                    tick
+                    token0Price
+                    token1Price
+                    totalValueLockedUSD
                 }
-                token1 {
-                    id
-                    symbol
-                    decimals
-                }
-                feeTier
-                liquidity
-                sqrtPrice
-                tick
-                token0Price
-                token1Price
-                totalValueLockedUSD
             }
-        }
-    `
+        `
 
-variables := map[string]interface{}{
-"token0": strings.ToLower(token0),
-"token1": strings.ToLower(token1),
-}
-
-var result struct {
-Pools []Pool `json:"pools"`
-}
-
-if err := s.client.Query(ctx, query, variables, &result); err != nil {
-return nil, err
-}
-
-return result.Pools, nil
+    variables := map[string]interface{}{
+        "token0": strings.ToLower(token0),
+        "token1": strings.ToLower(token1),
+    }
+    
+    var result struct {
+        Pools []Pool `json:"pools"`
+    }
+    
+    if err := s.client.Query(ctx, query, variables, &result); err != nil {
+        return nil, err
+    }
+    
+    return result.Pools, nil
 }
 
 // GetRecentSwaps 获取最近的交换
 func (s *UniswapV3Subgraph) GetRecentSwaps(ctx context.Context, poolID string, limit int) ([]Swap, error) {
-query := `
-        query GetRecentSwaps($poolID: String!, $limit: Int!) {
-            swaps(
-                first: $limit
-                orderBy: timestamp
-                orderDirection: desc
-                where: { pool: $poolID }
-            ) {
-                id
-                timestamp
-                pool {
+    query := `
+            query GetRecentSwaps($poolID: String!, $limit: Int!) {
+                swaps(
+                    first: $limit
+                    orderBy: timestamp
+                    orderDirection: desc
+                    where: { pool: $poolID }
+                ) {
                     id
-                    token0 { symbol }
-                    token1 { symbol }
+                    timestamp
+                    pool {
+                        id
+                        token0 { symbol }
+                        token1 { symbol }
+                    }
+                    sender
+                    recipient
+                    amount0
+                    amount1
+                    amountUSD
+                    sqrtPriceX96
+                    tick
+                    logIndex
                 }
-                sender
-                recipient
-                amount0
-                amount1
-                amountUSD
-                sqrtPriceX96
-                tick
-                logIndex
             }
-        }
     `
 
-variables := map[string]interface{}{
-"poolID": strings.ToLower(poolID),
-"limit":  limit,
-}
-
-var result struct {
-Swaps []Swap `json:"swaps"`
-}
-
-if err := s.client.Query(ctx, query, variables, &result); err != nil {
-return nil, err
-}
-
-return result.Swaps, nil
+    variables := map[string]interface{}{
+        "poolID": strings.ToLower(poolID),
+        "limit":  limit,
+    }
+    
+    var result struct {
+        Swaps []Swap `json:"swaps"`
+    }
+    
+    if err := s.client.Query(ctx, query, variables, &result); err != nil {
+        return nil, err
+    }
+    
+    return result.Swaps, nil
 }
 
 // GetPoolDayData 获取池子每日数据
 func (s *UniswapV3Subgraph) GetPoolDayData(ctx context.Context, poolID string, days int) ([]PoolDayData, error) {
-query := `
-        query GetPoolDayData($poolID: String!, $days: Int!) {
-            poolDayDatas(
-                first: $days
-                orderBy: date
-                orderDirection: desc
-                where: { pool: $poolID }
-            ) {
-                date
-                pool { id }
-                liquidity
-                sqrtPrice
-                token0Price
-                token1Price
-                tick
-                tvlUSD
-                volumeToken0
-                volumeToken1
-                volumeUSD
-                feesUSD
-                txCount
-                open
-                high
-                low
-                close
+    query := `
+            query GetPoolDayData($poolID: String!, $days: Int!) {
+                poolDayDatas(
+                    first: $days
+                    orderBy: date
+                    orderDirection: desc
+                    where: { pool: $poolID }
+                ) {
+                    date
+                    pool { id }
+                    liquidity
+                    sqrtPrice
+                    token0Price
+                    token1Price
+                    tick
+                    tvlUSD
+                    volumeToken0
+                    volumeToken1
+                    volumeUSD
+                    feesUSD
+                    txCount
+                    open
+                    high
+                    low
+                    close
+                }
             }
-        }
-    `
-
-variables := map[string]interface{}{
-"poolID": strings.ToLower(poolID),
-"days":   days,
-}
-
-var result struct {
-PoolDayDatas []PoolDayData `json:"poolDayDatas"`
-}
-
-if err := s.client.Query(ctx, query, variables, &result); err != nil {
-return nil, err
-}
-
-return result.PoolDayDatas, nil
+        `
+    
+    variables := map[string]interface{}{
+        "poolID": strings.ToLower(poolID),
+        "days":   days,
+    }
+    
+    var result struct {
+        PoolDayDatas []PoolDayData `json:"poolDayDatas"`
+    }
+    
+    if err := s.client.Query(ctx, query, variables, &result); err != nil {
+        return nil, err
+    }
+    
+    return result.PoolDayDatas, nil
 }
 
 // PoolDayData 池子每日数据
 type PoolDayData struct {
-Date         int64  `json:"date"`
-Pool         Pool   `json:"pool"`
-Liquidity    string `json:"liquidity"`
-SqrtPrice    string `json:"sqrtPrice"`
-Token0Price  string `json:"token0Price"`
-Token1Price  string `json:"token1Price"`
-Tick         string `json:"tick"`
-TvlUSD       string `json:"tvlUSD"`
-VolumeToken0 string `json:"volumeToken0"`
-VolumeToken1 string `json:"volumeToken1"`
-VolumeUSD    string `json:"volumeUSD"`
-FeesUSD      string `json:"feesUSD"`
-TxCount      string `json:"txCount"`
-Open         string `json:"open"`
-High         string `json:"high"`
-Low          string `json:"low"`
-Close        string `json:"close"`
+    Date         int64  `json:"date"`
+    Pool         Pool   `json:"pool"`
+    Liquidity    string `json:"liquidity"`
+    SqrtPrice    string `json:"sqrtPrice"`
+    Token0Price  string `json:"token0Price"`
+    Token1Price  string `json:"token1Price"`
+    Tick         string `json:"tick"`
+    TvlUSD       string `json:"tvlUSD"`
+    VolumeToken0 string `json:"volumeToken0"`
+    VolumeToken1 string `json:"volumeToken1"`
+    VolumeUSD    string `json:"volumeUSD"`
+    FeesUSD      string `json:"feesUSD"`
+    TxCount      string `json:"txCount"`
+    Open         string `json:"open"`
+    High         string `json:"high"`
+    Low          string `json:"low"`
+    Close        string `json:"close"`
 }
 ```
 
@@ -412,34 +412,34 @@ Close        string `json:"close"`
 ```go
 // SubgraphAggregator 多 Subgraph 聚合器
 type SubgraphAggregator struct {
-uniswapV3  *UniswapV3Subgraph
-uniswapV2  *UniswapV2Subgraph
-sushiswap  *SushiswapSubgraph
-curve      *CurveSubgraph
-balancer   *BalancerSubgraph
+    uniswapV3  *UniswapV3Subgraph
+    uniswapV2  *UniswapV2Subgraph
+    sushiswap  *SushiswapSubgraph
+    curve      *CurveSubgraph
+    balancer   *BalancerSubgraph
 }
 
 // AggregatedPool 聚合池子信息
 type AggregatedPool struct {
-Protocol   string
-Address    common.Address
-Token0     common.Address
-Token1     common.Address
-Fee        *big.Int
-TVL        *big.Float
-Volume24h  *big.Float
-Price      *big.Float
+    Protocol   string
+    Address    common.Address
+    Token0     common.Address
+    Token1     common.Address
+    Fee        *big.Int
+    TVL        *big.Float
+    Volume24h  *big.Float
+    Price      *big.Float
 }
 
 // NewSubgraphAggregator 创建聚合器
 func NewSubgraphAggregator(config *SubgraphConfig) *SubgraphAggregator {
-return &SubgraphAggregator{
-uniswapV3: NewUniswapV3Subgraph(config.UniswapV3Endpoint, config.APIKey),
-uniswapV2: NewUniswapV2Subgraph(config.UniswapV2Endpoint, config.APIKey),
-sushiswap: NewSushiswapSubgraph(config.SushiswapEndpoint, config.APIKey),
-curve:     NewCurveSubgraph(config.CurveEndpoint, config.APIKey),
-balancer:  NewBalancerSubgraph(config.BalancerEndpoint, config.APIKey),
-}
+    return &SubgraphAggregator{
+        uniswapV3: NewUniswapV3Subgraph(config.UniswapV3Endpoint, config.APIKey),
+        uniswapV2: NewUniswapV2Subgraph(config.UniswapV2Endpoint, config.APIKey),
+        sushiswap: NewSushiswapSubgraph(config.SushiswapEndpoint, config.APIKey),
+        curve:     NewCurveSubgraph(config.CurveEndpoint, config.APIKey),
+        balancer:  NewBalancerSubgraph(config.BalancerEndpoint, config.APIKey),
+    }
 }
 
 // GetAllPoolsForPair 获取所有协议的池子
@@ -1415,61 +1415,61 @@ WorstTrade:         row["worst_trade"].(float64),
 
 // AnalyzeProfitableRoutes 分析盈利路径
 func (a *ArbitrageAnalyzer) AnalyzeProfitableRoutes(ctx context.Context) ([]RouteAnalysis, error) {
-// 获取历史套利交易
-trades, err := a.db.GetArbitrageTrades(ctx, 1000)
-if err != nil {
-return nil, err
-}
-
-// 按路径分组统计
-routeStats := make(map[string]*RouteAnalysis)
-
-for _, trade := range trades {
-routeKey := strings.Join(trade.Protocols, "->")
-
-if _, ok := routeStats[routeKey]; !ok {
-routeStats[routeKey] = &RouteAnalysis{
-Route:     trade.Protocols,
-RouteKey:  routeKey,
-Trades:    0,
-TotalProfit: 0,
-}
-}
-
-stats := routeStats[routeKey]
-stats.Trades++
-stats.TotalProfit += trade.ProfitUSD
-
-if trade.ProfitUSD > 0 {
-stats.WinningTrades++
-}
-}
-
-// 转换为切片并计算平均值
-var results []RouteAnalysis
-for _, stats := range routeStats {
-stats.AvgProfit = stats.TotalProfit / float64(stats.Trades)
-stats.WinRate = float64(stats.WinningTrades) / float64(stats.Trades)
-results = append(results, *stats)
-}
-
-// 按总利润排序
-sort.Slice(results, func (i, j int) bool {
-return results[i].TotalProfit > results[j].TotalProfit
-})
-
-return results, nil
+    // 获取历史套利交易
+    trades, err := a.db.GetArbitrageTrades(ctx, 1000)
+    if err != nil {
+        return nil, err
+    }
+    
+    // 按路径分组统计
+    routeStats := make(map[string]*RouteAnalysis)
+    
+    for _, trade := range trades {
+        routeKey := strings.Join(trade.Protocols, "->")
+        
+        if _, ok := routeStats[routeKey]; !ok {
+            routeStats[routeKey] = &RouteAnalysis{
+                Route:     trade.Protocols,
+                RouteKey:  routeKey,
+                Trades:    0,
+                TotalProfit: 0,
+            }
+        }
+        
+        stats := routeStats[routeKey]
+        stats.Trades++
+        stats.TotalProfit += trade.ProfitUSD
+        
+        if trade.ProfitUSD > 0 {
+            stats.WinningTrades++
+        }
+    }
+    
+    // 转换为切片并计算平均值
+    var results []RouteAnalysis
+    for _, stats := range routeStats {
+        stats.AvgProfit = stats.TotalProfit / float64(stats.Trades)
+        stats.WinRate = float64(stats.WinningTrades) / float64(stats.Trades)
+        results = append(results, *stats)
+    }
+    
+    // 按总利润排序
+    sort.Slice(results, func (i, j int) bool {
+        return results[i].TotalProfit > results[j].TotalProfit
+    })
+    
+    return results, nil
 }
 
 // RouteAnalysis 路径分析
 type RouteAnalysis struct {
-Route         []string `json:"route"`
-RouteKey      string   `json:"route_key"`
-Trades        int      `json:"trades"`
-WinningTrades int      `json:"winning_trades"`
-TotalProfit   float64  `json:"total_profit"`
-AvgProfit     float64  `json:"avg_profit"`
-WinRate       float64  `json:"win_rate"`
+    Route         []string `json:"route"`
+    RouteKey      string   `json:"route_key"`
+    Trades        int      `json:"trades"`
+    WinningTrades int      `json:"winning_trades"`
+    TotalProfit   float64  `json:"total_profit"`
+    AvgProfit     float64  `json:"avg_profit"`
+    WinRate       float64  `json:"win_rate"`
 }
 ```
 
@@ -1478,85 +1478,85 @@ WinRate       float64  `json:"win_rate"`
 ```go
 // DashboardServer 监控面板服务器
 type DashboardServer struct {
-analyzer *ArbitrageAnalyzer
-indexer  *SwapIndexer
-
-// WebSocket 连接
-clients  map[*websocket.Conn]bool
-mu       sync.RWMutex
-
-// 实时数据
-latestSwaps       []IndexedSwap
-latestDiscrepancies []PriceDiscrepancy
+    analyzer *ArbitrageAnalyzer
+    indexer  *SwapIndexer
+    
+    // WebSocket 连接
+    clients  map[*websocket.Conn]bool
+    mu       sync.RWMutex
+    
+    // 实时数据
+    latestSwaps       []IndexedSwap
+    latestDiscrepancies []PriceDiscrepancy
 }
 
 // DashboardData 面板数据
 type DashboardData struct {
-Stats            ArbitrageStats      `json:"stats"`
-RecentSwaps      []IndexedSwap       `json:"recent_swaps"`
-Discrepancies    []PriceDiscrepancy  `json:"discrepancies"`
-TopRoutes        []RouteAnalysis     `json:"top_routes"`
-GasPrice         uint64              `json:"gas_price"`
-ETHPrice         float64             `json:"eth_price"`
-LastUpdated      time.Time           `json:"last_updated"`
+    Stats            ArbitrageStats      `json:"stats"`
+    RecentSwaps      []IndexedSwap       `json:"recent_swaps"`
+    Discrepancies    []PriceDiscrepancy  `json:"discrepancies"`
+    TopRoutes        []RouteAnalysis     `json:"top_routes"`
+    GasPrice         uint64              `json:"gas_price"`
+    ETHPrice         float64             `json:"eth_price"`
+    LastUpdated      time.Time           `json:"last_updated"`
 }
 
 // NewDashboardServer 创建面板服务器
 func NewDashboardServer(analyzer *ArbitrageAnalyzer, indexer *SwapIndexer) *DashboardServer {
-return &DashboardServer{
-analyzer: analyzer,
-indexer:  indexer,
-clients:  make(map[*websocket.Conn]bool),
-}
+    return &DashboardServer{
+        analyzer: analyzer,
+        indexer:  indexer,
+        clients:  make(map[*websocket.Conn]bool),
+    }
 }
 
 // Start 启动服务器
 func (s *DashboardServer) Start(addr string) error {
-http.HandleFunc("/api/dashboard", s.handleDashboard)
-http.HandleFunc("/api/stats", s.handleStats)
-http.HandleFunc("/api/swaps", s.handleSwaps)
-http.HandleFunc("/ws", s.handleWebSocket)
-http.Handle("/", http.FileServer(http.Dir("./static")))
-
-// 启动数据更新协程
-go s.updateLoop()
-
-return http.ListenAndServe(addr, nil)
+    http.HandleFunc("/api/dashboard", s.handleDashboard)
+    http.HandleFunc("/api/stats", s.handleStats)
+    http.HandleFunc("/api/swaps", s.handleSwaps)
+    http.HandleFunc("/ws", s.handleWebSocket)
+    http.Handle("/", http.FileServer(http.Dir("./static")))
+    
+    // 启动数据更新协程
+    go s.updateLoop()
+    
+    return http.ListenAndServe(addr, nil)
 }
 
 // handleDashboard 处理面板数据请求
 func (s *DashboardServer) handleDashboard(w http.ResponseWriter, r *http.Request) {
-ctx := r.Context()
-
-// 获取统计数据
-stats, err := s.analyzer.GetHistoricalStats(ctx, 7)
-if err != nil {
-http.Error(w, err.Error(), http.StatusInternalServerError)
-return
-}
-
-// 获取最近交换
-swaps, _ := s.indexer.db.GetRecentSwaps(ctx, 50)
-
-// 获取价格差异
-discrepancies, _ := s.analyzer.FindPriceDiscrepancies(ctx, 0.5)
-
-// 获取顶级路径
-routes, _ := s.analyzer.AnalyzeProfitableRoutes(ctx)
-if len(routes) > 10 {
-routes = routes[:10]
-}
-
-data := DashboardData{
-Stats:         *stats,
-RecentSwaps:   swaps,
-Discrepancies: discrepancies,
-TopRoutes:     routes,
-LastUpdated:   time.Now(),
-}
-
-w.Header().Set("Content-Type", "application/json")
-json.NewEncoder(w).Encode(data)
+    ctx := r.Context()
+    
+    // 获取统计数据
+    stats, err := s.analyzer.GetHistoricalStats(ctx, 7)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    
+    // 获取最近交换
+    swaps, _ := s.indexer.db.GetRecentSwaps(ctx, 50)
+    
+    // 获取价格差异
+    discrepancies, _ := s.analyzer.FindPriceDiscrepancies(ctx, 0.5)
+    
+    // 获取顶级路径
+    routes, _ := s.analyzer.AnalyzeProfitableRoutes(ctx)
+    if len(routes) > 10 {
+        routes = routes[:10]
+    }
+    
+    data := DashboardData{
+        Stats:         *stats,
+        RecentSwaps:   swaps,
+        Discrepancies: discrepancies,
+        TopRoutes:     routes,
+        LastUpdated:   time.Now(),
+    }
+    
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(data)
 }
 
 // handleWebSocket 处理 WebSocket 连接

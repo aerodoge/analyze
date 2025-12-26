@@ -2,8 +2,8 @@
 
 ## 概述
 
-[evmone](https://github.com/ipsilon/evmone) 是由以太坊基金会 Ipsilon 团队开发的高性能 C++ EVM 实现。本文将 evmone 与
-go-ethereum 的 EVM 实现进行全方位对比，分析其架构设计、性能优化和技术创新。
+[evmone](https://github.com/ipsilon/evmone) 是由以太坊基金会Ipsilon团队开发的高性能C++ EVM实现。本文将evmone与
+go-ethereum的EVM实现进行全方位对比，分析其架构设计、性能优化和技术创新。
 
 ## 1. 项目概览
 
@@ -26,36 +26,36 @@ go-ethereum 的 EVM 实现进行全方位对比，分析其架构设计、性能
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  go-ethereum EVM:                                           │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                                                     │   │
-│  │   go-ethereum Client                                │   │
-│  │   ┌─────────────────────────────────────────────┐   │   │
-│  │   │  P2P │ Consensus │ State │ TxPool │ RPC    │   │   │
-│  │   └─────────────────────────────────────────────┘   │   │
-│  │                      │                              │   │
-│  │                      ▼                              │   │
-│  │   ┌─────────────────────────────────────────────┐   │   │
-│  │   │            内置 EVM 解释器                   │   │   │
-│  │   │      紧密耦合，为 geth 优化                  │   │   │
-│  │   └─────────────────────────────────────────────┘   │   │
-│  │                                                     │   │
-│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │                                                     │    │
+│  │   go-ethereum Client                                │    │
+│  │   ┌─────────────────────────────────────────────┐   │    │
+│  │   │  P2P │ Consensus │ State │ TxPool │ RPC     │   │    │
+│  │   └─────────────────────────────────────────────┘   │    │
+│  │                      │                              │    │
+│  │                      ▼                              │    │
+│  │   ┌─────────────────────────────────────────────┐   │    │
+│  │   │            内置 EVM 解释器                    │   │    │
+│  │   │        紧密耦合，为 geth 优化                  │   │    │
+│  │   └─────────────────────────────────────────────┘   │    │
+│  │                                                     │    │
+│  └─────────────────────────────────────────────────────┘    │
 │                                                             │
 │  evmone:                                                    │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                                                     │   │
-│  │   Any EVMC-Compatible Client                        │   │
-│  │   ┌─────────────────────────────────────────────┐   │   │
-│  │   │  geth │ nethermind │ besu │ erigon │ ...   │   │   │
-│  │   └─────────────────────────────────────────────┘   │   │
-│  │                      │ EVMC API                     │   │
-│  │                      ▼                              │   │
-│  │   ┌─────────────────────────────────────────────┐   │   │
-│  │   │            evmone Library                    │   │   │
-│  │   │      模块化设计，可插拔替换                   │   │   │
-│  │   └─────────────────────────────────────────────┘   │   │
-│  │                                                     │   │
-│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │                                                     │    │
+│  │   Any EVMC-Compatible Client                        │    │
+│  │   ┌─────────────────────────────────────────────┐   │    │
+│  │   │  geth │ nethermind │ besu │ erigon │ ...    │   │    │
+│  │   └─────────────────────────────────────────────┘   │    │
+│  │                      │ EVMC API                     │    │
+│  │                      ▼                              │    │
+│  │   ┌─────────────────────────────────────────────┐   │    │
+│  │   │            evmone Library                   │   │    │
+│  │   │      模块化设计，可插拔替换                     │   │    │
+│  │   └─────────────────────────────────────────────┘   │    │
+│  │                                                     │    │
+│  └─────────────────────────────────────────────────────┘    │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -69,26 +69,26 @@ go-ethereum 的 EVM 实现进行全方位对比，分析其架构设计、性能
 ```go
 // go-ethereum 的解释器结构
 type EVMInterpreter struct {
-evm   *EVM
-table *JumpTable // 操作码跳转表
+    evm   *EVM
+    table *JumpTable // 操作码跳转表
 }
 
 // 主执行循环
 func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) ([]byte, error) {
-// 简单的 for 循环 + switch 分发
-for {
-op := contract.GetOp(pc)
-operation := in.table[op]
-
-// 每条指令检查 gas
-if !contract.UseGas(operation.constantGas) {
-return nil, ErrOutOfGas
-}
-
-// 执行指令
-res, err := operation.execute(&pc, in, callContext)
-// ...
-}
+    // 简单的for循环 + switch分发
+    for {
+        op := contract.GetOp(pc)
+        operation := in.table[op]
+        
+        // 每条指令检查 gas
+        if !contract.UseGas(operation.constantGas) {
+            return nil, ErrOutOfGas
+        }
+        
+        // 执行指令
+        res, err := operation.execute(&pc, in, callContext)
+        // ...
+    }
 }
 ```
 
@@ -128,19 +128,19 @@ namespace evmone::advanced {
 type JumpTable [256]*operation
 
 type operation struct {
-execute     executionFunc
-constantGas uint64
-dynamicGas  gasFunc
-minStack    int
-maxStack    int
-memorySize  memorySizeFunc
+    execute     executionFunc
+    constantGas uint64
+    dynamicGas  gasFunc
+    minStack    int
+    maxStack    int
+    memorySize  memorySizeFunc
 }
 
 // 每条指令独立执行和检查
 func opAdd(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {
-x, y := scope.Stack.pop(), scope.Stack.peek()
-y.Add(&x, y)
-return nil, nil
+    x, y := scope.Stack.pop(), scope.Stack.peek()
+    y.Add(&x, y)
+    return nil, nil
 }
 ```
 
@@ -168,7 +168,7 @@ struct Instruction {
     int16_t stack_change;
 };
 
-// 执行循环 - 无 switch 开销
+// 执行循环 - 无switch开销
 while (true) {
     // 直接通过函数指针调用
     const auto result = instr->fn(instr, state);
@@ -216,24 +216,24 @@ void check_requirements(const BasicBlock& block, ExecutionState& state) {
 ```go
 // go-ethereum 每条指令都检查
 func (in *EVMInterpreter) Run(...) {
-for {
-op := contract.GetOp(pc)
-operation := in.table[op]
-
-// 每条指令检查栈
-if sLen := stack.len(); sLen < operation.minStack {
-return nil, &ErrStackUnderflow{}
-} else if sLen > operation.maxStack {
-return nil, &ErrStackOverflow{}
-}
-
-// 每条指令检查 gas
-cost := operation.constantGas
-if !contract.UseGas(cost) {
-return nil, ErrOutOfGas
-}
-// ...
-}
+    for {
+        op := contract.GetOp(pc)
+        operation := in.table[op]
+        
+        // 每条指令检查栈
+        if sLen := stack.len(); sLen < operation.minStack {
+            return nil, &ErrStackUnderflow{}
+        } else if sLen > operation.maxStack {
+            return nil, &ErrStackOverflow{}
+        }
+        
+        // 每条指令检查 gas
+        cost := operation.constantGas
+        if !contract.UseGas(cost) {
+            return nil, ErrOutOfGas
+        }
+        // ...
+    }
 }
 ```
 
@@ -280,48 +280,48 @@ return nil, ErrOutOfGas
 │                    性能差异原因                               │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  1. 语言级别差异                                             │
-│     ┌─────────────────────────────────────────────────┐    │
-│     │  Go:                                            │    │
-│     │  • 垃圾回收 (GC) 开销                           │    │
-│     │  • 运行时调度开销                               │    │
-│     │  • 接口调用动态分发                             │    │
-│     │                                                 │    │
-│     │  C++:                                           │    │
-│     │  • 零成本抽象                                   │    │
-│     │  • 编译时优化                                   │    │
-│     │  • 内联函数展开                                 │    │
-│     │  • 无 GC 开销                                   │    │
-│     └─────────────────────────────────────────────────┘    │
+│  1. 语言级别差异                                              │
+│     ┌─────────────────────────────────────────────────┐     │
+│     │  Go:                                            │     │
+│     │  • 垃圾回收 (GC) 开销                             │     │
+│     │  • 运行时调度开销                                  │    │
+│     │  • 接口调用动态分发                                │     │
+│     │                                                 │     │
+│     │  C++:                                           │     │
+│     │  • 零成本抽象                                     │     │
+│     │  • 编译时优化                                     │     │
+│     │  • 内联函数展开                                   │     │
+│     │  • 无 GC 开销                                    │     │
+│     └─────────────────────────────────────────────────┘     │
 │                                                             │
-│  2. 架构设计差异                                             │
-│     ┌─────────────────────────────────────────────────┐    │
-│     │  go-ethereum:                                   │    │
-│     │  • 逐指令 gas/栈检查                           │    │
-│     │  • 函数表间接调用                               │    │
-│     │  • big.Int (已优化为 uint256)                  │    │
-│     │                                                 │    │
-│     │  evmone:                                        │    │
-│     │  • 基本块批量检查                               │    │
-│     │  • 间接调用线程化                               │    │
-│     │  • intx 原生 256-bit                           │    │
-│     │  • 预计算优化                                   │    │
-│     └─────────────────────────────────────────────────┘    │
+│  2. 架构设计差异                                              │
+│     ┌─────────────────────────────────────────────────┐     │
+│     │  go-ethereum:                                   │     │
+│     │  • 逐指令 gas/栈检查                              │     │
+│     │  • 函数表间接调用                                 │     │
+│     │  • big.Int (已优化为 uint256)                    │     │
+│     │                                                 │     │
+│     │  evmone:                                        │     │
+│     │  • 基本块批量检查                                 │     │
+│     │  • 间接调用线程化                                 │     │
+│     │  • intx 原生 256-bit                             │     │
+│     │  • 预计算优化                                     │     │
+│     └─────────────────────────────────────────────────┘     │
 │                                                             │
 │  3. 整数运算                                                 │
-│     ┌─────────────────────────────────────────────────┐    │
-│     │  go-ethereum (旧):                              │    │
-│     │  • big.Int 动态分配                            │    │
-│     │  • 每次运算需要 modulo 2^256                   │    │
-│     │                                                 │    │
-│     │  go-ethereum (新 uint256):                      │    │
-│     │  • 定长 [4]uint64                              │    │
-│     │  • 提升 22-47% 性能                            │    │
-│     │                                                 │    │
-│     │  evmone (intx):                                 │    │
-│     │  • 编译时优化的 uint256                        │    │
-│     │  • SIMD 指令加速                               │    │
-│     └─────────────────────────────────────────────────┘    │
+│     ┌─────────────────────────────────────────────────┐     │
+│     │  go-ethereum (旧):                              │     │
+│     │  • big.Int 动态分配                              │     │
+│     │  • 每次运算需要 modulo 2^256                      │     │
+│     │                                                 │     │
+│     │  go-ethereum (新 uint256):                      │     │
+│     │  • 定长 [4]uint64                               │     │
+│     │  • 提升 22-47% 性能                              │     │
+│     │                                                 │     │
+│     │  evmone (intx):                                 │     │
+│     │  • 编译时优化的 uint256                           │     │
+│     │  • SIMD 指令加速                                 │     │
+│     └─────────────────────────────────────────────────┘     │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -333,18 +333,18 @@ return nil, ErrOutOfGas
 ```go
 // holiman/uint256 - 专为 EVM 优化
 type Int struct {
-// 固定 4 个 uint64，避免动态分配
-arr [4]uint64
+    // 固定 4 个 uint64，避免动态分配
+    arr [4]uint64
 }
 
 // 加法实现
 func (z *Int) Add(x, y *Int) *Int {
-var carry uint64
-z.arr[0], carry = bits.Add64(x.arr[0], y.arr[0], 0)
-z.arr[1], carry = bits.Add64(x.arr[1], y.arr[1], carry)
-z.arr[2], carry = bits.Add64(x.arr[2], y.arr[2], carry)
-z.arr[3], _ = bits.Add64(x.arr[3], y.arr[3], carry)
-return z
+    var carry uint64
+    z.arr[0], carry = bits.Add64(x.arr[0], y.arr[0], 0)
+    z.arr[1], carry = bits.Add64(x.arr[1], y.arr[1], carry)
+    z.arr[2], carry = bits.Add64(x.arr[2], y.arr[2], carry)
+    z.arr[3], _ = bits.Add64(x.arr[3], y.arr[3], carry)
+    return z
 }
 
 // 性能提升 (相比 big.Int)
@@ -567,19 +567,19 @@ go-ethereum 的 EOF 实现进度较慢，但也在跟进：
 ```go
 // go-ethereum EOF 支持 (开发中)
 type EOFContainer struct {
-Version      byte
-TypeSection  []FunctionType
-CodeSections [][]byte
-DataSection  []byte
+    Version      byte
+    TypeSection  []FunctionType
+    CodeSections [][]byte
+    DataSection  []byte
 }
 
 // EOF 验证
 func ValidateEOF(code []byte) error {
-// 验证魔数
-if len(code) < 2 || code[0] != 0xEF || code[1] != 0x00 {
-return ErrInvalidMagic
-}
-// ...
+    // 验证魔数
+    if len(code) < 2 || code[0] != 0xEF || code[1] != 0x00 {
+        return ErrInvalidMagic
+    }
+    // ...
 }
 ```
 
@@ -628,21 +628,21 @@ ExecutionResult p256verify(const uint8_t* input, size_t size) noexcept;
 ```go
 // go-ethereum 预编译合约
 var PrecompiledContractsBerlin = map[common.Address]PrecompiledContract{
-common.BytesToAddress([]byte{1}): &ecrecover{},
-common.BytesToAddress([]byte{2}): &sha256hash{},
-common.BytesToAddress([]byte{3}): &ripemd160hash{},
-common.BytesToAddress([]byte{4}): &dataCopy{},
-common.BytesToAddress([]byte{5}): &bigModExp{eip2565: true},
-common.BytesToAddress([]byte{6}): &bn256AddIstanbul{},
-common.BytesToAddress([]byte{7}): &bn256ScalarMulIstanbul{},
-common.BytesToAddress([]byte{8}): &bn256PairingIstanbul{},
-common.BytesToAddress([]byte{9}): &blake2F{},
+    common.BytesToAddress([]byte{1}): &ecrecover{},
+    common.BytesToAddress([]byte{2}): &sha256hash{},
+    common.BytesToAddress([]byte{3}): &ripemd160hash{},
+    common.BytesToAddress([]byte{4}): &dataCopy{},
+    common.BytesToAddress([]byte{5}): &bigModExp{eip2565: true},
+    common.BytesToAddress([]byte{6}): &bn256AddIstanbul{},
+    common.BytesToAddress([]byte{7}): &bn256ScalarMulIstanbul{},
+    common.BytesToAddress([]byte{8}): &bn256PairingIstanbul{},
+    common.BytesToAddress([]byte{9}): &blake2F{},
 }
 
 // 预编译接口
 type PrecompiledContract interface {
-RequiredGas(input []byte) uint64
-Run(input []byte) ([]byte, error)
+    RequiredGas(input []byte) uint64
+    Run(input []byte) ([]byte, error)
 }
 ```
 
@@ -712,20 +712,20 @@ size_t memory_cost(size_t new_size) noexcept {
 ```go
 // go-ethereum 内存管理
 type Memory struct {
-store       []byte
-lastGasCost uint64
+    store       []byte
+    lastGasCost uint64
 }
 
 // 栈使用切片
 type Stack struct {
-data []uint256.Int
+    data []uint256.Int
 }
 
 // 需要边界检查和可能的重新分配
 func (m *Memory) Resize(size uint64) {
-if uint64(len(m.store)) < size {
-m.store = append(m.store, make([]byte, size-uint64(len(m.store)))...)
-}
+    if uint64(len(m.store)) < size {
+        m.store = append(m.store, make([]byte, size-uint64(len(m.store)))...)
+    }
 }
 ```
 
@@ -809,17 +809,17 @@ void op_tstore(ExecutionState& state) noexcept {
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ✅ 推荐使用:                                                │
-│  • 高性能执行环境（3-6x 性能提升）                          │
-│  • 需要 EVMC 标准接口的项目                                 │
-│  • 智能合约测试和模拟                                       │
-│  • EVM 研究和实验                                           │
-│  • 非 Go 技术栈的集成                                       │
-│  • EOF 新特性测试                                           │
+│  • 高性能执行环境（3-6x 性能提升）                              │
+│  • 需要 EVMC 标准接口的项目                                    │
+│  • 智能合约测试和模拟                                          │
+│  • EVM 研究和实验                                             │
+│  • 非 Go 技术栈的集成                                         │
+│  • EOF 新特性测试                                             │
 │                                                             │
-│  ⚠️ 需要注意:                                               │
-│  • 需要 EVMC 兼容的客户端                                   │
-│  • C++ 依赖（编译/运行时）                                  │
-│  • 与 geth 内部 API 不兼容                                  │
+│  ⚠️ 需要注意:                                                │
+│  • 需要 EVMC 兼容的客户端                                      │
+│  • C++ 依赖（编译/运行时）                                     │
+│  • 与 geth 内部 API 不兼容                                    │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -832,17 +832,17 @@ void op_tstore(ExecutionState& state) noexcept {
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ✅ 推荐使用:                                                │
-│  • 完整以太坊客户端部署                                     │
-│  • Go 技术栈项目                                            │
-│  • 需要与 geth 深度集成                                     │
-│  • 需要调试追踪功能                                         │
-│  • 主网验证节点                                             │
+│  • 完整以太坊客户端部署                                        │
+│  • Go 技术栈项目                                             │
+│  • 需要与 geth 深度集成                                       │
+│  • 需要调试追踪功能                                            │
+│  • 主网验证节点                                               │
 │                                                             │
 │  优势:                                                       │
-│  • 与 geth 生态完全兼容                                     │
-│  • 丰富的调试工具                                           │
-│  • 活跃的社区支持                                           │
-│  • 成熟稳定的实现                                           │
+│  • 与 geth 生态完全兼容                                       │
+│  • 丰富的调试工具                                             │
+│  • 活跃的社区支持                                             │
+│  • 成熟稳定的实现                                             │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -880,12 +880,7 @@ func NewEvmoneVM() *EvmoneVM {
 }
 
 // Execute 执行字节码
-func (e *EvmoneVM) Execute(
-	host *Host,
-	rev Revision,
-	msg *Message,
-	code []byte,
-) (*Result, error) {
+func (e *EvmoneVM) Execute(host *Host, rev Revision, msg *Message, code []byte) (*Result, error) {
 	var codePtr *C.uint8_t
 	if len(code) > 0 {
 		codePtr = (*C.uint8_t)(unsafe.Pointer(&code[0]))
@@ -1036,26 +1031,26 @@ func get_storage_cb(ctx *C.struct_evmc_host_context, addr *C.evmc_address, key *
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      选择决策树                              │
+│                      选择决策树                               │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  需要完整以太坊客户端?                                       │
-│  ├─ 是 → go-ethereum (geth)                                │
-│  │       └─ 可选: 使用 evmone 作为 EVM 插件提升性能         │
-│  │                                                         │
-│  └─ 否 → 继续评估                                          │
-│          │                                                 │
-│          ├─ 需要最高执行性能?                               │
-│          │  └─ 是 → evmone                                 │
-│          │                                                 │
-│          ├─ Go 技术栈?                                     │
-│          │  └─ 是 → go-ethereum EVM                        │
-│          │                                                 │
-│          ├─ 需要 EVMC 兼容?                                │
-│          │  └─ 是 → evmone                                 │
-│          │                                                 │
-│          └─ 研究/测试用途?                                  │
-│             └─ evmone (更快的反馈循环)                      │
+│  需要完整以太坊客户端?                                         │
+│  ├─ 是 → go-ethereum (geth)                                 │
+│  │       └─ 可选: 使用 evmone 作为 EVM 插件提升性能             │
+│  │                                                          │
+│  └─ 否 → 继续评估                                             │
+│          │                                                  │
+│          ├─ 需要最高执行性能?                                  │
+│          │  └─ 是 → evmone                                  │
+│          │                                                  │
+│          ├─ Go 技术栈?                                       │
+│          │  └─ 是 → go-ethereum EVM                         │
+│          │                                                  │
+│          ├─ 需要 EVMC 兼容?                                  │
+│          │  └─ 是 → evmone                                  │
+│          │                                                  │
+│          └─ 研究/测试用途?                                    │
+│             └─ evmone (更快的反馈循环)                        │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -1332,10 +1327,7 @@ struct BlockAnalysis {
 };
 
 /// 分析字节码
-AdvancedCodeAnalysis analyze(
-    evmc_revision rev,
-    bytes_view code) noexcept
-{
+AdvancedCodeAnalysis analyze(evmc_revision rev, bytes_view code) noexcept {
     AdvancedCodeAnalysis analysis;
 
     // 预分配空间避免重新分配

@@ -2,8 +2,8 @@
 
 ## 概述
 
-[revm](https://github.com/bluealloy/revm) 是用 Rust 编写的高性能 EVM 实现，由 Dragan Rakita 开发维护。
-作为以太坊生态中最重要的 Rust EVM 实现，revm 被广泛应用于：
+[revm](https://github.com/bluealloy/revm) 是用Rust编写的高性能EVM实现，由Dragan Rakita开发维护。
+作为以太坊生态中最重要的Rust EVM实现，revm被广泛应用于：
 
 - **客户端**: Reth, Helios, Trin
 - **开发工具**: Foundry, Hardhat
@@ -58,7 +58,7 @@ revm 的三大核心原则：
 
 ### 2.1 Workspace 结构
 
-revm 采用 29 个 crate 的工作空间组织：
+revm采用29 个 crate的工作空间组织：
 
 ```
 revm/
@@ -126,7 +126,7 @@ revm/
 
 ### 3.1 Interpreter 泛型架构
 
-revm 最精妙的设计是基于 trait 的泛型解释器：
+revm最精妙的设计是基于trait的泛型解释器：
 
 ```rust
 /// 解释器类型族 - 定义所有可替换组件
@@ -201,17 +201,17 @@ pub trait MemoryTr {
     fn resize(&mut self, new_size: usize);
 }
 
-// 组合 trait - 表达更高层概念
-pub trait LegacyBytecode: Jumps + Immediates + LoopControl {
-    fn bytecode_len(&self) -> usize;
-    fn bytecode_slice(&self) -> &[u8];
-}
-
 // 控制流 trait
 pub trait LoopControl {
     fn set_action(&mut self, action: InterpreterAction);
     fn action(&self) -> &InterpreterAction;
     fn is_not_end(&self) -> bool;
+}
+
+// 组合 trait - 表达更高层概念
+pub trait LegacyBytecode: Jumps + Immediates + LoopControl {
+    fn bytecode_len(&self) -> usize;
+    fn bytecode_slice(&self) -> &[u8];
 }
 ```
 
@@ -266,19 +266,19 @@ impl<WIRE: InterpreterTypes> Interpreter<WIRE> {
 ```go
 // go-ethereum 的执行循环
 func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) ([]byte, error) {
-for {
-op := contract.GetOp(pc)
-operation := in.table[op]
-
-// 每条指令都检查（无法内联优化）
-if !contract.UseGas(operation.constantGas) {
-return nil, ErrOutOfGas
-}
-
-// 动态分发
-res, err := operation.execute(&pc, in, callContext)
-// ...
-}
+    for {
+        op := contract.GetOp(pc)
+        operation := in.table[op]
+        
+        // 每条指令都检查（无法内联优化）
+        if !contract.UseGas(operation.constantGas) {
+            return nil, ErrOutOfGas
+        }
+        
+        // 动态分发
+        res, err := operation.execute(&pc, in, callContext)
+        // ...
+    }
 }
 
 // revm 的优势：
@@ -5624,89 +5624,89 @@ pub enum HealError {
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Snap Sync 架构                                │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
+│                                                                 │
 │   Phase 1: 账户同步                                              │
 │   ┌──────────────────────────────────────────────────────────┐  │
-│   │  Local Node                          Remote Peer          │  │
+│   │  Local Node                          Remote Peer         │  │
 │   │  ┌─────────────┐                    ┌─────────────┐      │  │
 │   │  │ Request     │ GetAccountRange    │ Serve       │      │  │
 │   │  │ Scheduler   │───────────────────▶│ Handler     │      │  │
 │   │  └─────────────┘                    └─────────────┘      │  │
-│   │        │         AccountRange              │             │  │
-│   │        │◀─────────────────────────────────┘             │  │
+│   │        │         AccountRange             │              │  │
+│   │        │◀─────────────────────────────────┘              │  │
 │   │        │  [accounts + merkle proof]                      │  │
 │   │        ▼                                                 │  │
-│   │  ┌─────────────┐                                        │  │
-│   │  │ Proof       │ Verify against                         │  │
-│   │  │ Verifier    │ target state root                      │  │
-│   │  └─────────────┘                                        │  │
+│   │  ┌─────────────┐                                         │  │
+│   │  │ Proof       │ Verify against                          │  │
+│   │  │ Verifier    │ target state root                       │  │
+│   │  └─────────────┘                                         │  │
 │   │        │                                                 │  │
 │   │        ▼                                                 │  │
-│   │  ┌─────────────┐                                        │  │
-│   │  │ State DB    │ Store verified accounts                │  │
-│   │  └─────────────┘                                        │  │
+│   │  ┌─────────────┐                                         │  │
+│   │  │ State DB    │ Store verified accounts                 │  │
+│   │  └─────────────┘                                         │  │
 │   └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
+│                                                                 │
 │   Phase 2: 存储同步                                              │
 │   ┌──────────────────────────────────────────────────────────┐  │
 │   │  For each account with storage:                          │  │
 │   │                                                          │  │
-│   │  ┌─────────────┐  GetStorageRanges  ┌─────────────┐     │  │
-│   │  │ Storage     │───────────────────▶│ Remote      │     │  │
-│   │  │ Scheduler   │                    │ Peer        │     │  │
-│   │  └─────────────┘                    └─────────────┘     │  │
-│   │        │           StorageRanges           │            │  │
-│   │        │◀─────────────────────────────────┘            │  │
-│   │        │  [slots + proof for each account]              │  │
-│   │        ▼                                                │  │
-│   │  ┌─────────────┐                                       │  │
-│   │  │ Verify      │ Check storage root                    │  │
-│   │  │ Storage     │ matches account                       │  │
-│   │  └─────────────┘                                       │  │
+│   │  ┌─────────────┐  GetStorageRanges  ┌─────────────┐      │  │
+│   │  │ Storage     │───────────────────▶│ Remote      │      │  │
+│   │  │ Scheduler   │                    │ Peer        │      │  │
+│   │  └─────────────┘                    └─────────────┘      │  │
+│   │        │           StorageRanges          │              │  │
+│   │        │◀─────────────────────────────────┘              │  │
+│   │        │  [slots + proof for each account]               │  │
+│   │        ▼                                                 │  │
+│   │  ┌─────────────┐                                         │  │
+│   │  │ Verify      │ Check storage root                      │  │
+│   │  │ Storage     │ matches account                         │  │
+│   │  └─────────────┘                                         │  │
 │   └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
+│                                                                 │
 │   Phase 3: Bytecode 同步                                         │
 │   ┌──────────────────────────────────────────────────────────┐  │
-│   │  ┌─────────────┐  GetByteCodes      ┌─────────────┐     │  │
-│   │  │ Code        │───────────────────▶│ Remote      │     │  │
-│   │  │ Scheduler   │                    │ Peer        │     │  │
-│   │  └─────────────┘                    └─────────────┘     │  │
-│   │        │           ByteCodes               │            │  │
-│   │        │◀─────────────────────────────────┘            │  │
-│   │        │  [code hashes -> bytecode]                     │  │
-│   │        ▼                                                │  │
-│   │  ┌─────────────┐                                       │  │
-│   │  │ Verify      │ keccak256(code) == code_hash          │  │
-│   │  │ Code Hash   │                                       │  │
-│   │  └─────────────┘                                       │  │
+│   │  ┌─────────────┐  GetByteCodes      ┌─────────────┐      │  │
+│   │  │ Code        │───────────────────▶│ Remote      │      │  │
+│   │  │ Scheduler   │                    │ Peer        │      │  │
+│   │  └─────────────┘                    └─────────────┘      │  │
+│   │        │           ByteCodes              │              │  │
+│   │        │◀─────────────────────────────────┘              │  │
+│   │        │  [code hashes -> bytecode]                      │  │
+│   │        ▼                                                 │  │
+│   │  ┌─────────────┐                                         │  │
+│   │  │ Verify      │ keccak256(code) == code_hash            │  │
+│   │  │ Code Hash   │                                         │  │
+│   │  └─────────────┘                                         │  │
 │   └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│   Phase 4: Trie Healing                                          │
+│                                                                 │
+│   Phase 4: Trie Healing                                         │
 │   ┌──────────────────────────────────────────────────────────┐  │
-│   │  ┌─────────────┐                                        │  │
-│   │  │ Walk Trie   │ Identify missing nodes                 │  │
-│   │  │ Locally     │                                        │  │
-│   │  └──────┬──────┘                                        │  │
-│   │         │                                               │  │
-│   │         ▼                                               │  │
-│   │  ┌─────────────┐  GetTrieNodes      ┌─────────────┐    │  │
-│   │  │ Request     │───────────────────▶│ Remote      │    │  │
-│   │  │ Missing     │                    │ Peer        │    │  │
-│   │  └─────────────┘                    └─────────────┘    │  │
-│   │         │           TrieNodes             │            │  │
-│   │         │◀────────────────────────────────┘            │  │
-│   │         ▼                                              │  │
-│   │  ┌─────────────┐                                       │  │
-│   │  │ Fill Gaps   │ Complete trie structure               │  │
-│   │  └─────────────┘                                       │  │
+│   │  ┌─────────────┐                                         │  │
+│   │  │ Walk Trie   │ Identify missing nodes                  │  │
+│   │  │ Locally     │                                         │  │
+│   │  └──────┬──────┘                                         │  │
+│   │         │                                                │  │
+│   │         ▼                                                │  │
+│   │  ┌─────────────┐  GetTrieNodes      ┌─────────────┐      │  │
+│   │  │ Request     │───────────────────▶│ Remote      │      │  │
+│   │  │ Missing     │                    │ Peer        │      │  │
+│   │  └─────────────┘                    └─────────────┘      │  │
+│   │         │           TrieNodes             │              │  │
+│   │         │◀────────────────────────────────┘              │  │
+│   │         ▼                                                │  │
+│   │  ┌─────────────┐                                         │  │
+│   │  │ Fill Gaps   │ Complete trie structure                 │  │
+│   │  └─────────────┘                                         │  │
 │   └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│   Final: 验证状态根                                              │
+│                                                                 │
+│   Final: 验证状态根                                               │
 │   ┌──────────────────────────────────────────────────────────┐  │
-│   │  computed_root = rebuild_trie(accounts, storage)        │  │
-│   │  assert(computed_root == target_state_root)             │  │
+│   │  computed_root = rebuild_trie(accounts, storage)         │  │
+│   │  assert(computed_root == target_state_root)              │  │
 │   └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -18060,25 +18060,25 @@ contract LightClientBridge {
 ```
 常见跨链桥攻击:
 ┌─────────────────────────────────────────────────────────────┐
-│  1. 虚假存款证明                                            │
-│     • 伪造源链存款事件                                      │
-│     • 防护: 完整验证源链状态                                │
+│  1. 虚假存款证明                                              │
+│     • 伪造源链存款事件                                         │
+│     • 防护: 完整验证源链状态                                   │
 ├─────────────────────────────────────────────────────────────┤
-│  2. 验证者密钥泄露                                          │
-│     • 攻击者获取足够验证者私钥                              │
-│     • 防护: MPC, HSM, 阈值签名                              │
+│  2. 验证者密钥泄露                                            │
+│     • 攻击者获取足够验证者私钥                                  │
+│     • 防护: MPC, HSM, 阈值签名                                │
 ├─────────────────────────────────────────────────────────────┤
-│  3. 重放攻击                                                │
-│     • 在不同链上重复使用同一签名                            │
-│     • 防护: 包含 chainId 在签名消息中                       │
+│  3. 重放攻击                                                 │
+│     • 在不同链上重复使用同一签名                                │
+│     • 防护: 包含 chainId 在签名消息中                          │
 ├─────────────────────────────────────────────────────────────┤
-│  4. 重入攻击                                                │
-│     • 在提款过程中重入                                      │
-│     • 防护: CEI 模式, ReentrancyGuard                       │
+│  4. 重入攻击                                                 │
+│     • 在提款过程中重入                                        │
+│     • 防护: CEI 模式, ReentrancyGuard                        │
 ├─────────────────────────────────────────────────────────────┤
-│  5. 预言机操纵                                              │
-│     • 操纵价格预言机影响跨链交换                            │
-│     • 防护: TWAP, 多预言机                                  │
+│  5. 预言机操纵                                               │
+│     • 操纵价格预言机影响跨链交换                                │
+│     • 防护: TWAP, 多预言机                                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -18091,24 +18091,24 @@ contract LightClientBridge {
 ```
 形式化验证方法:
 ┌─────────────────────────────────────────────────────────────┐
-│  模型检测 (Model Checking)                                  │
-│  • 穷举所有可能状态                                         │
-│  • 验证属性在所有状态下成立                                 │
-│  • 工具: SPIN, TLA+                                         │
+│  模型检测 (Model Checking)                                   │
+│  • 穷举所有可能状态                                            │
+│  • 验证属性在所有状态下成立                                     │
+│  • 工具: SPIN, TLA+                                          │
 ├─────────────────────────────────────────────────────────────┤
-│  定理证明 (Theorem Proving)                                 │
-│  • 使用数学证明验证程序属性                                 │
-│  • 可处理无限状态空间                                       │
+│  定理证明 (Theorem Proving)                                  │
+│  • 使用数学证明验证程序属性                                     │
+│  • 可处理无限状态空间                                          │
 │  • 工具: Coq, Isabelle, Lean                                │
 ├─────────────────────────────────────────────────────────────┤
-│  符号执行 (Symbolic Execution)                              │
-│  • 使用符号值代替具体值执行                                 │
-│  • 探索所有执行路径                                         │
-│  • 工具: Mythril, Manticore                                 │
+│  符号执行 (Symbolic Execution)                               │
+│  • 使用符号值代替具体值执行                                     │
+│  • 探索所有执行路径                                            │
+│  • 工具: Mythril, Manticore                                  │
 ├─────────────────────────────────────────────────────────────┤
 │  SMT 求解 (SMT Solving)                                     │
-│  • 可满足性模理论                                           │
-│  • 验证约束是否可满足                                       │
+│  • 可满足性模理论                                             │
+│  • 验证约束是否可满足                                          │
 │  • 工具: Z3, CVC4                                           │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -18573,10 +18573,7 @@ contract AssemblyOptimization {
     }
 
     // 高效的地址数组检查
-    function containsAddress(
-        address[] calldata addresses,
-        address target
-    ) external pure returns (bool found) {
+    function containsAddress(address[] calldata addresses, address target) external pure returns (bool found) {
         assembly {
             let len := addresses.length
             let ptr := addresses.offset
@@ -18599,10 +18596,7 @@ contract AssemblyOptimization {
     }
 
     // 批量转账优化
-    function batchTransfer(
-        address[] calldata recipients,
-        uint256[] calldata amounts
-    ) external payable {
+    function batchTransfer(address[] calldata recipients, uint256[] calldata amounts) external payable {
         assembly {
             let recipientsLen := recipients.length
 
