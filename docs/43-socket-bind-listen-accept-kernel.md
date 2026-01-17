@@ -1236,13 +1236,14 @@ int __inet_hash(struct sock *sk, struct sock *osk)
     struct inet_hashinfo *hashinfo = sk->sk_prot->h.hashinfo;
     struct inet_listen_hashbucket *ilb;
 
-    if (sk->sk_state != TCP_LISTEN) {
-        // 连接状态的 socket，加入到 ehash (established hash)
+    if (sk->sk_state != TCP_LISTEN) 
+    {
+        // 连接状态的socket，加入到ehash (established hash)
         __inet_hash_nolisten(sk, osk);
         return 0;
     }
 
-    // 监听状态的 socket，加入到 lhash (listening hash)
+    // 监听状态的socket，加入到lhash (listening hash)
     ilb = &hashinfo->listening_hash[inet_sk_listen_hashfn(sk)];
 
     spin_lock(&ilb->lock);
@@ -1257,55 +1258,55 @@ int __inet_hash(struct sock *sk, struct sock *osk)
 **监听哈希表结构**：
 
 ```
-内核的监听 socket 哈希表：
-┌────────────────────────────────────────┐
-│ inet_hashinfo.listening_hash[]         │
-├────────────────────────────────────────┤
-│ [0] → NULL                             │
-├────────────────────────────────────────┤
-│ [1] → sock (监听 8888)                  │
-│        sk_state: TCP_LISTEN            │
-│        sk_num: 8888                    │
-│        icsk_accept_queue: {SYN队列, ACCEPT队列}
-├────────────────────────────────────────┤
-│ [2] → sock (监听 80) → sock (监听 8080)│
-├────────────────────────────────────────┤
-│ ...                                    │
-└────────────────────────────────────────┘
+内核的监听socket哈希表：
+┌────────────────────────────────────────────────┐
+│ inet_hashinfo.listening_hash[]                 │
+├────────────────────────────────────────────────┤
+│ [0] → NULL                                     │
+├────────────────────────────────────────────────┤
+│ [1] → sock (监听8888)                           │
+│        sk_state: TCP_LISTEN                    │
+│        sk_num: 8888                            │
+│        icsk_accept_queue: {SYN队列, ACCEPT队列} │
+├────────────────────────────────────────────────┤
+│ [2] → sock (监听80) → sock (监听 8080)          │
+├────────────────────────────────────────────────┤
+│ ...                                            │
+└────────────────────────────────────────────────┘
 
-当收到 SYN 包时：
+当收到SYN包时：
   1. 根据目标端口查找监听哈希表
-  2. 找到对应的监听 socket
-  3. 将连接加入 SYN 队列
+  2. 找到对应的监听socket
+  3. 将连接加入SYN队列
 ```
 
 ### 4.8 listen() 完成后的状态
 
 ```
 内核对象状态：
-┌─────────────────┐
-│ struct sock     │
-│   sk_state: TCP_LISTEN      ← 状态变为 LISTEN
-│   sk_num:   8888
-│   sk_max_ack_backlog: 128   ← backlog
-│      ↓
-│ struct inet_connection_sock
-│      ↓
-│ icsk_accept_queue:
-│   ┌─────────────────────┐
-│   │ SYN 队列 (空)        │
-│   │ [空]                │
-│   └─────────────────────┘
-│   ┌─────────────────────┐
-│   │ ACCEPT 队列 (空)     │
-│   │ [空]                │
-│   └─────────────────────┘
-└─────────────────┘
+┌────────────────────────────┐
+│ struct sock                │
+│   sk_state: TCP_LISTEN     │  ← 状态变为LISTEN
+│   sk_num:   8888           │
+│   sk_max_ack_backlog: 128  │  ← backlog
+│      ↓                     │
+│ struct inet_connection_sock│
+│      ↓                     │
+│ icsk_accept_queue:         │
+│   ┌─────────────────────┐  │
+│   │ SYN 队列 (空)        │  │
+│   │ [空]                │  │
+│   └─────────────────────┘  │
+│   ┌─────────────────────┐  │
+│   │ ACCEPT 队列 (空)     │  │
+│   │ [空]                │  │
+│   └─────────────────────┘  │
+└────────────────────────────┘
         ↓
-┌─────────────────┐
-│ 监听哈希表       │
-│ listening_hash[hash(8888)] → 指向上面的 sock
-└─────────────────┘
+┌────────────────────────────┐
+│ 监听哈希表                   │
+│ listening_hash[hash(8888)] │ → 指向上面的sock
+└────────────────────────────┘
 ```
 
 ---
@@ -1318,19 +1319,17 @@ int __inet_hash(struct sock *sk, struct sock *osk)
 struct sockaddr_in client_addr;
 socklen_t addr_len = sizeof(client_addr);
 
-int client_fd = accept(listen_fd,
-                       (struct sockaddr*)&client_addr,
-                       &addr_len);
+int client_fd = accept(listen_fd, (struct sockaddr*)&client_addr, &addr_len);
 
-// client_fd 是新连接的 socket
-// client_addr 包含客户端的 IP 和端口
+// client_fd是新连接的socket
+// client_addr包含客户端的IP和端口
 ```
 
-**accept() 的作用**：
+**accept()的作用**：
 
 ```
-从 ACCEPT 队列中取出一个已完成三次握手的连接：
-  1. 创建新的 socket 对象
+从ACCEPT队列中取出一个已完成三次握手的连接：
+  1. 创建新的socket对象
   2. 分配新的文件描述符
   3. 返回给应用程序
 ```
@@ -1344,9 +1343,8 @@ accept(listen_fd, &client_addr, &addr_len)
 // 系统调用
 SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen)
     ↓
-// 实际调用 accept4
-SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr,
-                int __user *, upeer_addrlen, int, flags)
+// 实际调用accept4
+SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen, int, flags)
     ↓
 // 内核处理
 __sys_accept4(fd, upeer_sockaddr, upeer_addrlen, flags)
@@ -1356,19 +1354,18 @@ __sys_accept4(fd, upeer_sockaddr, upeer_addrlen, flags)
 
 ```c
 // net/socket.c
-int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
-                  int __user *upeer_addrlen, int flags)
+int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr, int __user *upeer_addrlen, int flags)
 {
     struct socket *sock, *newsock;
     struct file *newfile;
     int err, newfd;
 
-    // 1. 根据 fd 找到监听 socket
+    // 1. 根据fd找到监听socket
     sock = sockfd_lookup_light(fd, &err, &fput_needed);
     if (!sock)
         goto out;
 
-    // 2. 创建新的 socket 对象
+    // 2. 创建新的socket对象
     newsock = sock_alloc();
     if (!newsock)
         goto out_put;
@@ -1378,24 +1375,27 @@ int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
 
     // 3. 分配新的文件描述符
     newfd = get_unused_fd_flags(flags);
-    if (unlikely(newfd < 0)) {
+    if (unlikely(newfd < 0)) 
+    {
         err = newfd;
         sock_release(newsock);
         goto out_put;
     }
 
-    // 4. 创建新的 file 对象
+    // 4. 创建新的file对象
     newfile = sock_alloc_file(newsock, flags, sock->sk->sk_prot_creator->name);
 
-    // 5. 调用协议相关的 accept 函数
-    // 对于 TCP，调用 inet_accept()
+    // 5. 调用协议相关的accept函数
+    // 对于TCP，调用inet_accept()
     err = sock->ops->accept(sock, newsock, sock->file->f_flags, false);
     if (err < 0)
         goto out_fd;
 
     // 6. 如果提供了地址参数，拷贝客户端地址到用户空间
-    if (upeer_sockaddr) {
-        if (newsock->ops->getname(newsock, (struct sockaddr *)&address, &len, 2) < 0) {
+    if (upeer_sockaddr) 
+    {
+        if (newsock->ops->getname(newsock, (struct sockaddr *)&address, &len, 2) < 0) 
+        {
             err = -ECONNABORTED;
             goto out_fd;
         }
@@ -1420,7 +1420,7 @@ out_fd:
 }
 ```
 
-### 5.4 TCP 的 accept 实现
+### 5.4 TCP的accept实现
 
 ```c
 // net/ipv4/af_inet.c
@@ -1429,8 +1429,8 @@ int inet_accept(struct socket *sock, struct socket *newsock, int flags, bool ker
     struct sock *sk1 = sock->sk;
     int err = -EINVAL;
 
-    // 1. 调用传输层的 accept 函数
-    // 对于 TCP，调用 inet_csk_accept()
+    // 1. 调用传输层的accept函数
+    // 对于TCP，调用inet_csk_accept()
     struct sock *sk2 = sk1->sk_prot->accept(sk1, flags, &err, kern);
 
     if (!sk2)
@@ -1438,13 +1438,13 @@ int inet_accept(struct socket *sock, struct socket *newsock, int flags, bool ker
 
     lock_sock(sk2);
 
-    // 2. 设置新 socket 的状态
+    // 2. 设置新socket的状态
     sock_rps_record_flow(sk2);
     WARN_ON(!((1 << sk2->sk_state) &
               (TCPF_ESTABLISHED | TCPF_SYN_RECV |
                TCPF_CLOSE_WAIT | TCPF_CLOSE)));
 
-    // 3. 关联新 socket 和 newsock
+    // 3. 关联新socket和newsock
     sock_graft(sk2, newsock);
 
     newsock->state = SS_CONNECTED;
@@ -1455,7 +1455,7 @@ do_err:
 }
 ```
 
-### 5.5 从 ACCEPT 队列取出连接
+### 5.5 从ACCEPT队列取出连接
 
 ```c
 // net/ipv4/inet_connection_sock.c
@@ -1469,18 +1469,21 @@ struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
 
     lock_sock(sk);
 
-    // 1. 检查是否是监听 socket
-    if (sk->sk_state != TCP_LISTEN) {
+    // 1. 检查是否是监听socket
+    if (sk->sk_state != TCP_LISTEN) 
+    {
         error = -EINVAL;
         goto out_err;
     }
 
-    // 2. 从 ACCEPT 队列取出一个连接
+    // 2. 从ACCEPT队列取出一个连接
     req = reqsk_queue_remove(queue, sk);
-    if (!req) {
+    if (!req) 
+    {
         // 2.1 队列为空
-        if (flags & O_NONBLOCK) {
-            // 非阻塞模式，立即返回 EAGAIN
+        if (flags & O_NONBLOCK) 
+        {
+            // 非阻塞模式，立即返回EAGAIN
             error = -EAGAIN;
             goto out_err;
         }
@@ -1494,10 +1497,10 @@ struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
         req = reqsk_queue_remove(queue, sk);
     }
 
-    // 3. 取出成功，获取新的 sock
+    // 3. 取出成功，获取新的sock
     newsk = req->sk;
 
-    // 4. 清理 request_sock
+    // 4. 清理request_sock
     reqsk_put(req);
 
     release_sock(sk);
@@ -1521,7 +1524,8 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
     DEFINE_WAIT(wait);
     int err;
 
-    for (;;) {
+    for (;;) 
+    {
         // 1. 将当前进程加入到 socket 的等待队列
         prepare_to_wait_exclusive(sk_sleep(sk), &wait, TASK_INTERRUPTIBLE);
 
@@ -1565,51 +1569,51 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
 │   ↓                                     │
 │ ACCEPT 队列为空                          │
 │   ↓                                     │
-│ 进程 A 加入 socket 的等待队列             │
+│ 进程 A 加入 socket 的等待队列              │
 │   ↓                                     │
-│ 进程 A 睡眠 (状态: TASK_INTERRUPTIBLE)   │
+│ 进程 A 睡眠 (状态: TASK_INTERRUPTIBLE)    │
 └─────────────────────────────────────────┘
                 ↓ (等待...)
 ┌─────────────────────────────────────────┐
-│ 客户端连接到来，完成三次握手               │
+│ 客户端连接到来，完成三次握手                 │
 │   ↓                                     │
-│ 连接加入 ACCEPT 队列                     │
+│ 连接加入 ACCEPT 队列                      │
 │   ↓                                     │
-│ 内核唤醒等待队列中的进程                  │
+│ 内核唤醒等待队列中的进程                    │
 │   ↓                                     │
-│ 进程 A 被唤醒                            │
+│ 进程 A 被唤醒                             │
 │   ↓                                     │
-│ accept() 从队列取出连接，返回             │
+│ accept() 从队列取出连接，返回              │
 └─────────────────────────────────────────┘
 ```
 
 ### 5.7 accept() 完成后的状态
 
 ```
-监听 socket (listen_fd = 3):
-┌─────────────────┐
-│ struct sock     │
-│   sk_state: TCP_LISTEN
-│   sk_num:   8888
-│   icsk_accept_queue:
-│     ACCEPT 队列: [少了一个连接]
-└─────────────────┘
+监听socket(listen_fd = 3):
+┌──────────────────────────────┐
+│ struct sock                  │
+│   sk_state: TCP_LISTEN       │
+│   sk_num:   8888             │
+│   icsk_accept_queue:         │
+│     ACCEPT 队列: [少了一个连接] │
+└──────────────────────────────┘
 
-新连接 socket (client_fd = 4):
-┌─────────────────┐
-│ struct sock     │
-│   sk_state: TCP_ESTABLISHED  ← 已建立连接
-│   sk_num:   8888             ← 本地端口
-│   sk_rcv_saddr: 192.168.1.1  ← 本地 IP
-│   sk_daddr: 192.168.1.100    ← 客户端 IP
-│   sk_dport: 54321            ← 客户端端口
-└─────────────────┘
+新连接socket(client_fd = 4):
+┌─────────────────────────────┐
+│ struct sock                 │
+│   sk_state: TCP_ESTABLISHED │  ← 已建立连接
+│   sk_num:   8888            │  ← 本地端口
+│   sk_rcv_saddr: 192.168.1.1 │  ← 本地IP
+│   sk_daddr: 192.168.1.100   │  ← 客户端IP
+│   sk_dport: 54321           │  ← 客户端端口
+└─────────────────────────────┘
 
 文件描述符表：
 ┌────┬──────────────┐
-│ 3  │ listen_fd ─────→ 监听 socket
+│ 3  │ listen_fd ─────→ 监听socket
 ├────┼──────────────┤
-│ 4  │ client_fd ─────→ 新连接 socket ← accept() 返回
+│ 4  │ client_fd ─────→ 新连接socket ← accept()返回
 └────┴──────────────┘
 ```
 
@@ -1620,67 +1624,67 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
 ### 6.1 时间线
 
 ```
-时刻 t1: socket()
+时刻t1: socket()
 ┌─────────────────────────────────────────┐
-│ 用户空间: listen_fd = socket(...)       │
+│ 用户空间: listen_fd = socket(...)        │
 │                                         │
 │ 内核空间:                                │
-│   - 分配 socket, sock 对象               │
-│   - 分配 fd = 3                         │
+│   - 分配socket, sock对象                 │
+│   - 分配fd = 3                           │
 │   - sk_state: TCP_CLOSE                 │
 └─────────────────────────────────────────┘
 
-时刻 t2: bind()
+时刻t2: bind()
 ┌─────────────────────────────────────────┐
-│ 用户空间: bind(listen_fd, addr, ...)    │
+│ 用户空间: bind(listen_fd, addr, ...)     │
 │                                         │
 │ 内核空间:                                │
 │   - sk_num: 8888                        │
 │   - sk_rcv_saddr: 0.0.0.0               │
-│   - 加入端口哈希表                       │
-│   - sk_state: 仍为 TCP_CLOSE            │
+│   - 加入端口哈希表                        │
+│   - sk_state: 仍为TCP_CLOSE              │
 └─────────────────────────────────────────┘
 
-时刻 t3: listen()
+时刻t3: listen()
 ┌─────────────────────────────────────────┐
-│ 用户空间: listen(listen_fd, 128)        │
+│ 用户空间: listen(listen_fd, 128)         │
 │                                         │
 │ 内核空间:                                │
-│   - 创建 SYN 队列和 ACCEPT 队列          │
+│   - 创建SYN队列和ACCEPT队列               │
 │   - sk_state: TCP_LISTEN                │
-│   - 加入监听哈希表                       │
-│   - 现在可以接受连接了！                  │
+│   - 加入监听哈希表                        │
+│   - 现在可以接受连接了！                   │
 └─────────────────────────────────────────┘
 
 时刻 t4: 客户端发起连接 (三次握手)
 ┌─────────────────────────────────────────┐
-│ 客户端: connect(server_ip, 8888)        │
+│ 客户端: connect(server_ip, 8888)         │
 │   ↓                                     │
-│ 发送 SYN 包 → 服务器                     │
+│ 发送SYN包 → 服务器                        │
 │   ↓                                     │
-│ 内核收到 SYN:                            │
-│   1. 查找监听哈希表，找到 listen_fd      │
-│   2. 创建 request_sock，加入 SYN 队列    │
-│   3. 回复 SYN+ACK                       │
+│ 内核收到SYN:                             │
+│   1. 查找监听哈希表，找到listen_fd         │
+│   2. 创建request_sock，加入SYN队列        │
+│   3. 回复SYN+ACK                         │
 │   ↓                                     │
-│ 收到 ACK ← 客户端                        │
+│ 收到ACK ← 客户端                          │
 │   ↓                                     │
 │ 内核收到 ACK:                            │
-│   1. 从 SYN 队列移除                     │
-│   2. 创建新的 sock，加入 ACCEPT 队列     │
-│   3. 唤醒等待的 accept()                │
+│   1. 从SYN队列移除                       │
+│   2. 创建新的sock，加入ACCEPT队列          │
+│   3. 唤醒等待的accept()                   │
 └─────────────────────────────────────────┘
 
-时刻 t5: accept()
+时刻t5: accept()
 ┌─────────────────────────────────────────┐
-│ 用户空间: client_fd = accept(listen_fd) │
+│ 用户空间: client_fd = accept(listen_fd)  │
 │                                         │
 │ 内核空间:                                │
-│   - 从 ACCEPT 队列取出连接               │
-│   - 创建新的 socket 对象                 │
-│   - 分配 fd = 4                         │
+│   - 从ACCEPT队列取出连接                  │
+│   - 创建新的socket对象                    │
+│   - 分配fd = 4                           │
 │   - sk_state: TCP_ESTABLISHED           │
-│   - 返回 client_fd = 4                  │
+│   - 返回client_fd = 4                    │
 └─────────────────────────────────────────┘
 ```
 
@@ -1702,18 +1706,18 @@ socket 状态机：
 ┌──────────┐
 │TCP_LISTEN│  ← 进入监听状态，可以接受连接
 └──────────┘
-     ↓ (收到 SYN)
+     ↓ (收到SYN)
 ┌──────────┐
-│SYN_RECV  │  ← 半连接状态 (在 SYN 队列中)
+│SYN_RECV  │  ← 半连接状态 (在SYN队列中)
 └──────────┘
-     ↓ (收到 ACK，完成三次握手)
-┌──────────────┐
-│TCP_ESTABLISHED│  ← 完成连接 (在 ACCEPT 队列中)
-└──────────────┘
+     ↓ (收到ACK，完成三次握手)
+┌───────────────┐
+│TCP_ESTABLISHED│  ← 完成连接 (在ACCEPT队列中)
+└───────────────┘
      ↓ accept()
-┌──────────────┐
-│TCP_ESTABLISHED│  ← 新的 socket，交给应用程序
-└──────────────┘
+┌───────────────┐
+│TCP_ESTABLISHED│  ← 新的socket，交给应用程序
+└───────────────┘
 ```
 
 ### 6.3 内存布局
@@ -1728,32 +1732,32 @@ socket 状态机：
 └─────────────────┘
         ↓
 内核空间：
-┌─────────────────────────────────────────────────┐
-│ 文件描述符表 (fd_table)                           │
-│                                                 │
-│ [3] → file ─→ socket ─→ sock (监听 socket)       │
-│                          sk_state: TCP_LISTEN   │
-│                          sk_num: 8888           │
-│                          icsk_accept_queue      │
-│                                                 │
-│ [4] → file ─→ socket ─→ sock (连接 socket)       │
-│                          sk_state: TCP_ESTABLISHED
-│                          sk_num: 8888           │
-│                          sk_daddr: 192.168.1.100│
-│                          sk_dport: 54321        │
-└─────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────┐
+│ 文件描述符表 (fd_table)                              │
+│                                                    │
+│ [3] → file ─→ socket ─→ sock (监听 socket)          │
+│                          sk_state: TCP_LISTEN      │
+│                          sk_num: 8888              │
+│                          icsk_accept_queue         │
+│                                                    │
+│ [4] → file ─→ socket ─→ sock (连接 socket)          │
+│                          sk_state: TCP_ESTABLISHED │
+│                          sk_num: 8888              │
+│                          sk_daddr: 192.168.1.100   │
+│                          sk_dport: 54321           │
+└────────────────────────────────────────────────────┘
         ↓
 ┌─────────────────────────────────────────────────┐
 │ 哈希表                                           │
 │                                                 │
-│ 端口哈希表 (bhash):                              │
+│ 端口哈希表 (bhash):                               │
 │   [hash(8888)] → 监听 socket                     │
 │                                                 │
-│ 监听哈希表 (listening_hash):                     │
+│ 监听哈希表 (listening_hash):                      │
 │   [hash(8888)] → 监听 socket                     │
 │                                                 │
-│ 连接哈希表 (ehash):                              │
-│   [hash(本地:8888, 远程:54321)] → 连接 socket    │
+│ 连接哈希表 (ehash):                               │
+│   [hash(本地:8888, 远程:54321)] → 连接 socket     │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -1769,12 +1773,12 @@ socket 状态机：
 
 ```
 应用层（程序员视角）：
-├─ 一个文件描述符 (fd)
-└─ 可以 read()/write() 的对象
+├─ 一个文件描述符(fd)
+└─ 可以read()/write()的对象
 
 内核层（内核视角）：
 ├─ 一组数据结构（struct sock, struct tcp_sock）
-├─ TCP 状态（ESTABLISHED, CLOSE_WAIT 等）
+├─ TCP状态（ESTABLISHED, CLOSE_WAIT等）
 ├─ 发送/接收缓冲区
 ├─ 定时器（重传、keepalive）
 └─ 在哈希表中的索引
@@ -1788,79 +1792,77 @@ socket 状态机：
 内核为了节省内存，在连接的不同阶段使用不同大小的数据结构：
 
 ```c
-// 1. 半连接（SYN_RECV 状态）- 轻量级结构
-struct request_sock {
+// 1. 半连接（SYN_RECV状态）- 轻量级结构
+struct request_sock 
+{
     struct sock_common      skc;
-    struct request_sock    *dl_next;      // 链表指针
-    u16                     mss;          // MSS
-    u8                      num_retrans;  // 重传次数
+    struct request_sock    *dl_next;         // 链表指针
+    u16                     mss;             // MSS
+    u8                      num_retrans;     // 重传次数
     u8                      syn_ack_timeout; // SYN+ACK 超时
     // ... 很精简，只存储握手需要的信息
 };
-// 大小：约 128 字节
+// 大小：约128字节
 
 // 2. 完整连接（ESTABLISHED 状态）- 完整结构
-struct tcp_sock {
+struct tcp_sock 
+{
     struct inet_connection_sock inet_conn;
-
-    // TCP 状态
+    // TCP状态
     u32 rcv_nxt;        // 下一个期望接收的序列号
     u32 snd_nxt;        // 下一个要发送的序列号
     u32 snd_una;        // 第一个未确认的序列号
-
     // 缓冲区
     struct sk_buff_head out_of_order_queue;  // 乱序队列
     struct sk_buff     *send_head;           // 发送队列头
-
     // 拥塞控制
     u32 snd_cwnd;       // 拥塞窗口
     u32 snd_ssthresh;   // 慢启动阈值
-
     // 定时器
     struct timer_list retransmit_timer;  // 重传定时器
     struct timer_list delack_timer;      // 延迟ACK定时器
 
     // ... 非常多的字段
 };
-// 大小：约 1800+ 字节
+// 大小：约1800+字节
 ```
 
-#### 为什么要用轻量级的 request_sock？
+#### 为什么要用轻量级的request_sock？
 
-**防御 SYN Flood 攻击**：
+**防御SYN Flood攻击**：
 
 ```
-SYN Flood 攻击场景：
+SYN Flood攻击场景：
 ┌─────────────────────────────────────┐
-│ 攻击者发送 100 万个 SYN 包           │
+│ 攻击者发送100万个SYN包                 │
 └─────────────────────────────────────┘
          ↓
-如果每个连接都用 tcp_sock：
-├─ 1,000,000 × 1800 字节 = 1.7 GB 内存
+如果每个连接都用tcp_sock：
+├─ 1,000,000 × 1800 字节 = 1.7 GB内存
 └─ 服务器内存耗尽 ✗
 
-使用 request_sock：
-├─ 1,000,000 × 128 字节 = 122 MB 内存
+使用request_sock：
+├─ 1,000,000 × 128 字节 = 122 MB内存
 └─ 还能扛住 ✓
 ```
 
 #### "连接"的完整生命周期
 
 ```c
-// t1: 收到 SYN 包
+// t1: 收到SYN包
 tcp_v4_conn_request()
 {
     // 分配轻量级结构
     struct request_sock *req = reqsk_alloc();
     req->skc.state = TCP_SYN_RECV;
 
-    // 放入 SYN 队列
+    // 放入SYN队列
     inet_csk_reqsk_queue_hash_add(sk, req);
 
-    // 这时的"连接"只是一个 128 字节的结构体
+    // 这时的"连接"只是一个128字节的结构体
 }
 
-// t2: 收到 ACK，三次握手完成
+// t2: 收到ACK，三次握手完成
 tcp_v4_syn_recv_sock()
 {
     // 升级！分配完整的 sock
@@ -1871,19 +1873,19 @@ tcp_v4_syn_recv_sock()
     tcp_init_buffer_space(newsk);
     tcp_init_metrics(newsk);
 
-    // 从 SYN 队列移除 request_sock
+    // 从SYN队列移除request_sock
     inet_csk_reqsk_queue_unlink(sk, req);
 
-    // 放入 ACCEPT 队列
+    // 放入ACCEPT队列
     inet_csk_reqsk_queue_add(sk, req, newsk);
 
-    // 这时的"连接"变成了完整的 tcp_sock
+    // 这时的"连接"变成了完整的tcp_sock
 }
 
-// t3: accept() 取走连接
+// t3: accept()取走连接
 sys_accept4()
 {
-    // 从 ACCEPT 队列取出 newsk
+    // 从ACCEPT队列取出newsk
     struct sock *newsk = inet_csk_accept(sk);
 
     // 分配文件描述符
@@ -1891,22 +1893,22 @@ sys_accept4()
 
     // 返回给应用程序
     return newfd;
-    // 应用程序看到的是一个 fd，内核里是 tcp_sock
+    // 应用程序看到的是一个fd，内核里是tcp_sock
 }
 ```
 
-#### 一个 ESTABLISHED 连接包含什么
+#### 一个ESTABLISHED连接包含什么
 
 ```
 一个完整的连接在内核中包括：
 
 1. 核心数据结构
-   ├─ struct socket (VFS 层)
-   ├─ struct sock (通用 socket 层)
-   └─ struct tcp_sock (TCP 协议层)
+   ├─ struct socket (VFS层)
+   ├─ struct sock (通用socket层)
+   └─ struct tcp_sock (TCP协议层)
 
 2. 状态信息
-   ├─ TCP 状态（ESTABLISHED, FIN_WAIT_1 等）
+   ├─ TCP状态（ESTABLISHED, FIN_WAIT_1等）
    ├─ 序列号（snd_nxt, rcv_nxt）
    └─ 窗口大小（rcv_wnd, snd_wnd）
 
@@ -1917,18 +1919,18 @@ sys_accept4()
 
 4. 定时器
    ├─ 重传定时器（retransmit_timer）
-   ├─ 延迟 ACK 定时器（delack_timer）
-   ├─ Keepalive 定时器（keepalive_timer）
-   └─ TIME_WAIT 定时器（timewait_timer）
+   ├─ 延迟ACK定时器（delack_timer）
+   ├─ Keepalive定时器（keepalive_timer）
+   └─ TIME_WAIT定时器（timewait_timer）
 
 5. 拥塞控制状态
    ├─ 拥塞窗口（snd_cwnd）
    ├─ 慢启动阈值（snd_ssthresh）
-   └─ RTT 估计（srtt, mdev）
+   └─ RTT估计（srtt, mdev）
 
 6. 哈希表索引
-   ├─ 在 ehash 中的位置（通过四元组哈希）
-   └─ 在 bhash 中的位置（通过端口号哈希）
+   ├─ 在ehash中的位置（通过四元组哈希）
+   └─ 在bhash中的位置（通过端口号哈希）
 ```
 
 #### 形象类比
@@ -2094,6 +2096,499 @@ struct sock {
 ---
 
 ## 8. 三次握手详解
+
+### 8.0 三次握手基础：SYN、ACK、seq、ack详解
+
+#### TCP报文的关键字段
+
+```
+TCP报文头部（20字节）：
+┌────────────────────────────────────────┐
+│ 源端口 (16位) │ 目标端口 (16位)        │
+├────────────────────────────────────────┤
+│ 序列号 seq (32位)                       │  ← 本次发送数据的序列号
+├────────────────────────────────────────┤
+│ 确认号 ack (32位)                       │  ← 期望对方下次发送的序列号
+├────────────────────────────────────────┤
+│ 头部长度 │ 保留 │ 标志位 │ 窗口大小    │
+│          │      │ UAPRSF │             │
+│          │      │ RCSSYI │             │
+│          │      │ GKHTNN │             │
+│          │      │  └─ SYN: 同步标志    │
+│          │      │    └─ ACK: 确认标志  │
+├────────────────────────────────────────┤
+│ 校验和            │ 紧急指针            │
+├────────────────────────────────────────┤
+│ 选项（可选）                            │
+└────────────────────────────────────────┘
+```
+
+**核心字段说明**：
+- **SYN标志位**：同步标志，值为0或1，用于建立连接
+- **ACK标志位**：确认标志，值为0或1，表示ack字段有效
+- **seq（序列号）**：本次发送数据的起始序列号
+- **ack（确认号）**：期望对方下次发送的序列号（只有ACK=1时有效）
+
+#### 完整的三次握手流程（详细版）
+
+```
+客户端                                    服务器
+(CLOSED)                                (LISTEN)
+   │                                        │
+   │  [第1次握手] SYN                        │
+   │  ─────────────────────────────────────→│
+   │  TCP标志: SYN=1, ACK=0                  │
+   │  seq = 1000 (客户端随机生成的ISN)        │
+   │  ack = 0 (ACK=0时此字段无意义)           │
+   │  数据长度: 0                             │
+   │                                        │
+(SYN_SENT)                            (SYN_RECV)
+   │                                        │
+   │            [第2次握手] SYN+ACK           │
+   │  ←─────────────────────────────────────│
+   │  TCP标志: SYN=1, ACK=1                  │
+   │  seq = 2000 (服务器随机生成的ISN)        │
+   │  ack = 1001 (确认客户端SYN: 1000+1)     │
+   │  数据长度: 0                             │
+   │                                        │
+   │  [第3次握手] ACK                        │
+   │  ─────────────────────────────────────→│
+   │  TCP标志: SYN=0, ACK=1                  │
+   │  seq = 1001 (使用服务器期望的值)         │
+   │  ack = 2001 (确认服务器SYN: 2000+1)     │
+   │  数据长度: 0 (也可以携带数据)            │
+   │                                        │
+(ESTABLISHED)                        (ESTABLISHED)
+```
+
+**ISN (Initial Sequence Number)**: 初始序列号，每次建立连接时随机生成，防止旧连接的数据干扰新连接。
+
+#### 第1次握手详解
+
+```
+客户端 → 服务器
+┌─────────────────────────────────────────┐
+│ TCP 报文头部：                           │
+├─────────────────────────────────────────┤
+│ 源端口: 54321                            │
+│ 目标端口: 8888                           │
+├─────────────────────────────────────────┤
+│ 序列号 (seq):                            │
+│   seq = 1000                            │
+│   ↑ 客户端随机选择的初始序列号 (ISN)       │
+│   用于标识后续发送的数据                  │
+├─────────────────────────────────────────┤
+│ 确认号 (ack):                            │
+│   ack = 0                               │
+│   ↑ 因为ACK=0，这个字段无意义              │
+├─────────────────────────────────────────┤
+│ 标志位：                                 │
+│   SYN = 1    ← 请求建立连接               │
+│   ACK = 0    ← 没有确认信息               │
+│   FIN = 0                               │
+│   RST = 0                               │
+│   PSH = 0                               │
+│   URG = 0                               │
+├─────────────────────────────────────────┤
+│ 窗口大小: 65535 (接收窗口)               │
+│ 选项: MSS=1460, SACK_PERM, ...          │
+│ 数据长度: 0 (SYN包不携带数据)            │
+└─────────────────────────────────────────┘
+
+客户端状态变化: CLOSED → SYN_SENT
+服务器收到SYN后: LISTEN → SYN_RECV
+```
+
+**关键点**：
+- SYN占用1个序列号（即使没有数据）
+- seq=1000表示：我的初始序列号是1000
+- 下次发送数据将从seq=1001开始
+
+**内核操作**（服务器端）：
+```c
+tcp_v4_conn_request()
+{
+    // 1. 分配轻量级半连接结构
+    struct request_sock *req = reqsk_alloc();
+
+    // 2. 保存客户端信息
+    req->rcv_isn = 1000;  // 保存客户端的ISN
+    req->state = TCP_SYN_RECV;
+    req->client_ip = 192.168.1.100;
+    req->client_port = 54321;
+
+    // 3. 放入 SYN 队列（半连接队列）
+    inet_csk_reqsk_queue_hash_add(sk, req);
+
+    // 4. 生成服务器的ISN
+    u32 server_isn = secure_tcp_sequence_number();  // 比如 2000
+
+    // 5. 构造并发送 SYN+ACK
+    tcp_make_synack(sk, req, server_isn);
+    // SYN=1, ACK=1, seq=2000, ack=1001
+}
+```
+
+#### 第2次握手详解
+
+```
+服务器 → 客户端
+┌─────────────────────────────────────────┐
+│ TCP 报文头部：                           │
+├─────────────────────────────────────────┤
+│ 源端口: 8888                             │
+│ 目标端口: 54321                          │
+├─────────────────────────────────────────┤
+│ 序列号 (seq):                            │
+│   seq = 2000                            │
+│   ↑ 服务器随机选择的初始序列号 (ISN)       │
+├─────────────────────────────────────────┤
+│ 确认号 (ack):                            │
+│   ack = 1001                            │
+│   ↑ 计算: 客户端seq + 1 = 1000 + 1       │
+│   含义: "我收到了你的1000，期望你下次从1001开始" │
+├─────────────────────────────────────────┤
+│ 标志位：                                 │
+│   SYN = 1    ← 服务器也要建立连接          │
+│   ACK = 1    ← 确认收到客户端的SYN         │
+│   FIN = 0                               │
+│   RST = 0                               │
+├─────────────────────────────────────────┤
+│ 窗口大小: 65535                          │
+│ 选项: MSS=1460, ...                     │
+│ 数据长度: 0                              │
+└─────────────────────────────────────────┘
+
+服务器状态: SYN_RECV (等待客户端ACK)
+客户端收到后: SYN_SENT → ESTABLISHED
+```
+
+**为什么 ack = seq + 1？**
+```
+理解确认号的计算：
+
+1. SYN标志占用1个序列号
+   - 客户端的SYN包: seq=1000
+   - SYN占用序列号1000
+   - 下一个可用序列号是1001
+
+2. 服务器用 ack=1001 告诉客户端：
+   "我已经收到了序列号1000的SYN，
+    现在期望你从序列号1001开始发送数据"
+
+3. 同理，服务器的SYN也占用1个序列号：
+   - 服务器的SYN包: seq=2000
+   - SYN占用序列号2000
+   - 下一个可用序列号是2001
+```
+
+#### 第3次握手详解
+
+```
+客户端 → 服务器
+┌─────────────────────────────────────────┐
+│ TCP 报文头部：                           │
+├─────────────────────────────────────────┤
+│ 源端口: 54321                            │
+│ 目标端口: 8888                           │
+├─────────────────────────────────────────┤
+│ 序列号 (seq):                            │
+│   seq = 1001                            │
+│   ↑ 使用服务器期望的序列号                 │
+│   (就是第2次握手中服务器ack的值)           │
+├─────────────────────────────────────────┤
+│ 确认号 (ack):                            │
+│   ack = 2001                            │
+│   ↑ 计算: 服务器seq + 1 = 2000 + 1       │
+│   含义: "我收到了你的2000，期望你下次从2001开始" │
+├─────────────────────────────────────────┤
+│ 标志位：                                 │
+│   SYN = 0    ← 不再是SYN包                │
+│   ACK = 1    ← 确认收到服务器的SYN+ACK     │
+│   FIN = 0                               │
+├─────────────────────────────────────────┤
+│ 窗口大小: 65535                          │
+│ 数据长度: 0 (可以携带数据，称为"TFO")      │
+└─────────────────────────────────────────┘
+
+客户端状态: ESTABLISHED
+服务器收到后: SYN_RECV → ESTABLISHED
+```
+
+**内核操作**（服务器端）：
+```c
+tcp_v4_syn_recv_sock()
+{
+    // 1. 验证ACK
+    if (th->ack != 2001) {
+        // ACK错误，发送RST
+        tcp_send_reset(sk);
+        return NULL;
+    }
+
+    // 2. 从 SYN 队列移除 request_sock
+    inet_csk_reqsk_queue_unlink(sk, req);
+
+    // 3. 升级！创建完整的 tcp_sock (从128字节升级到1800+字节)
+    struct sock *newsk = tcp_create_openreq_child(sk, req);
+    newsk->sk_state = TCP_ESTABLISHED;
+
+    // 4. 初始化序列号状态
+    struct tcp_sock *tp = tcp_sk(newsk);
+    tp->rcv_nxt = 1001;  // 期望接收的下一个序列号
+    tp->snd_nxt = 2001;  // 下次发送的序列号
+    tp->snd_una = 2001;  // 第一个未确认的序列号（2001之前都已确认）
+
+    // 5. 放入 ACCEPT 队列（全连接队列）
+    inet_csk_reqsk_queue_add(sk, req, newsk);
+
+    // 6. 唤醒阻塞在 accept() 的进程
+    sk->sk_data_ready(sk);
+
+    return newsk;
+}
+```
+
+#### 序列号演进时间表
+
+```
+时刻 │ 方向 │ SYN │ ACK │  seq  │  ack  │ 占用序列号 │ 说明
+─────┼──────┼─────┼─────┼───────┼───────┼───────────┼──────────────
+t1   │ C→S  │  1  │  0  │ 1000  │   0   │ 1000      │ 客户端发起连接
+     │      │     │     │       │       │           │ SYN占用seq=1000
+─────┼──────┼─────┼─────┼───────┼───────┼───────────┼──────────────
+t2   │ S→C  │  1  │  1  │ 2000  │ 1001  │ 2000      │ 服务器确认并发送SYN
+     │      │     │     │       │       │           │ 确认1000，期望1001
+─────┼──────┼─────┼─────┼───────┼───────┼───────────┼──────────────
+t3   │ C→S  │  0  │  1  │ 1001  │ 2001  │ 无        │ 客户端确认服务器SYN
+     │      │     │     │       │       │           │ 确认2000，期望2001
+─────┼──────┼─────┼─────┼───────┼───────┼───────────┼──────────────
+t4   │ C→S  │  0  │  1  │ 1001  │ 2001  │1001-1100  │ 客户端发送100字节
+     │ 数据 │     │     │       │       │           │ seq从1001开始
+─────┼──────┼─────┼─────┼───────┼───────┼───────────┼──────────────
+t5   │ S→C  │  0  │  1  │ 2001  │ 1101  │ 无        │ 服务器确认收到
+     │ ACK  │     │     │       │       │           │ ack=1001+100=1101
+─────┼──────┼─────┼─────┼───────┼───────┼───────────┼──────────────
+t6   │ S→C  │  0  │  1  │ 2001  │ 1101  │2001-2200  │ 服务器发送200字节
+     │ 数据 │     │     │       │       │           │ seq从2001开始
+─────┼──────┼─────┼─────┼───────┼───────┼───────────┼──────────────
+t7   │ C→S  │  0  │  1  │ 1101  │ 2201  │ 无        │ 客户端确认收到
+     │ ACK  │     │     │       │       │           │ ack=2001+200=2201
+─────┴──────┴─────┴─────┴───────┴───────┴───────────┴──────────────
+```
+
+**关键规律**：
+- **SYN和FIN占用1个序列号**（即使不携带数据）
+- **数据占用的序列号 = 数据长度**
+- **纯ACK不占用序列号**
+- **ack = 已接收的最大seq + 已接收的数据长度**
+
+#### 为什么需要三次握手？（不是两次或四次）
+
+**为什么不是两次握手？**
+```
+场景：防止旧连接请求导致资源浪费
+
+┌────────────────────────────────────────┐
+│ 客户端发送SYN(seq=1000)                 │
+│   → 网络延迟，包在网络中滞留             │
+│                                        │
+│ 客户端超时，重发SYN(seq=2000)            │
+│   → 立即到达服务器                       │
+│   → 连接正常建立并使用                   │
+│   → 传输完数据后关闭连接                 │
+│                                        │
+│ 旧的SYN(seq=1000)终于到达！              │
+├────────────────────────────────────────┤
+│ 如果只有两次握手：                       │
+│   服务器收到旧SYN → 立即建立连接 ✗       │
+│   但客户端已经关闭了！                   │
+│   服务器白白分配资源（内存、端口等）      │
+│   资源泄漏！                            │
+├────────────────────────────────────────┤
+│ 三次握手的好处：                        │
+│   服务器收到旧SYN → 发送SYN+ACK          │
+│   客户端收到 → 发现是旧连接 → 发RST拒绝  │
+│   服务器收到RST → 释放资源 ✓            │
+│   避免资源浪费！                        │
+└────────────────────────────────────────┘
+```
+
+**为什么不是四次握手？**
+```
+三次已经足够：
+┌────────────────────────────────────────┐
+│ 需要确认的信息：                        │
+│ 1. 客户端 → 服务器方向可达 (第1次)       │
+│ 2. 服务器 → 客户端方向可达 (第2次)       │
+│ 3. 客户端确认服务器收到 (第3次)          │
+│                                        │
+│ 第2次握手同时完成了两件事：              │
+│ - 服务器发送自己的SYN                   │
+│ - 服务器确认客户端的SYN (ACK)            │
+│                                        │
+│ 如果分开成四次：                        │
+│ 1. 客户端: SYN                          │
+│ 2. 服务器: ACK                          │
+│ 3. 服务器: SYN                          │
+│ 4. 客户端: ACK                          │
+│                                        │
+│ 完全没必要！合并2和3可以减少1次RTT       │
+└────────────────────────────────────────┘
+```
+
+#### 序列号的作用
+
+**1. 保证数据有序**
+```
+发送端发送:
+  seq=1000, len=100  (数据A)
+  seq=1100, len=200  (数据B)
+  seq=1300, len=150  (数据C)
+
+网络乱序到达:
+  seq=1100, len=200  (B先到)
+  seq=1300, len=150  (C后到)
+  seq=1000, len=100  (A最后到)
+
+接收端根据seq重排:
+  1000 → 1100 → 1300 ✓
+  恢复正确顺序：A → B → C
+```
+
+**2. 检测丢包**
+```
+接收端状态: rcv_nxt = 1100 (期望接收1100)
+
+收到包: seq=1300, len=100
+  ↓
+发现: 1100 到 1299 之间的数据丢失了！
+  ↓
+动作:
+  - 将seq=1300的包放入乱序队列
+  - 发送重复ACK (ack=1100)
+  - 通知发送端重传1100-1299
+```
+
+**3. 防止重复数据**
+```
+接收端状态: rcv_nxt = 1500
+
+收到旧包: seq=1000, len=100
+  ↓
+判断: 1000 < 1500，这是已经接收过的旧数据
+  ↓
+动作: 丢弃，发送ACK(ack=1500)确认当前进度
+```
+
+**4. 防止注入攻击**
+```
+攻击者想注入伪造数据：
+┌────────────────────────────────────┐
+│ 攻击者抓包看到正常通信:             │
+│   seq=5000, ack=3000              │
+│                                   │
+│ 攻击者伪造包:                      │
+│   seq=5100, ack=3000, data="hack" │
+│   ↓                               │
+│ 接收端状态: rcv_nxt=5000           │
+│   ↓                               │
+│ 判断: seq=5100 > rcv_nxt=5000     │
+│       中间有数据丢失，放入乱序队列   │
+│   ↓                               │
+│ 真实的seq=5000包到达               │
+│   ↓                               │
+│ 判断: seq=5100是乱序包，但等待超时  │
+│       丢弃伪造包！ ✓               │
+│                                   │
+│ 攻击难度：                         │
+│   - ISN是32位随机数 (4,294,967,296种可能) │
+│   - 需要精确猜中当前的seq和ack      │
+│   - 几乎不可能成功                 │
+└────────────────────────────────────┘
+```
+
+#### 抓包验证
+
+**使用tcpdump抓取三次握手**：
+```bash
+# 抓取8888端口的握手包
+sudo tcpdump -i eth0 port 8888 -nn -S -vv
+
+# 参数说明:
+# -nn: 不解析主机名和端口名
+# -S:  显示绝对序列号（不是相对序列号）
+# -vv: 详细输出
+```
+
+**输出示例**：
+```
+# 第1次握手 - 客户端发送SYN
+12:00:00.000000 IP 192.168.1.100.54321 > 192.168.1.1.8888:
+  Flags [S], seq 1000, win 65535, options [mss 1460,sackOK,TS val 123456 ecr 0], length 0
+
+  解读:
+  - Flags [S]: SYN=1, ACK=0
+  - seq 1000: 客户端ISN=1000
+  - win 65535: 接收窗口大小
+  - mss 1460: 最大段大小
+  - length 0: 不携带数据
+
+# 第2次握手 - 服务器发送SYN+ACK
+12:00:00.000100 IP 192.168.1.1.8888 > 192.168.1.100.54321:
+  Flags [S.], seq 2000, ack 1001, win 65535, options [mss 1460,sackOK,TS val 234567 ecr 123456], length 0
+
+  解读:
+  - Flags [S.]: SYN=1, ACK=1 (点号表示ACK)
+  - seq 2000: 服务器ISN=2000
+  - ack 1001: 确认客户端seq+1
+  - length 0: 不携带数据
+
+# 第3次握手 - 客户端发送ACK
+12:00:00.000200 IP 192.168.1.100.54321 > 192.168.1.1.8888:
+  Flags [.], seq 1001, ack 2001, win 65535, options [TS val 123457 ecr 234567], length 0
+
+  解读:
+  - Flags [.]: SYN=0, ACK=1 (点号表示纯ACK)
+  - seq 1001: 使用服务器期望的序列号
+  - ack 2001: 确认服务器seq+1
+  - length 0: 不携带数据（也可以携带）
+
+# 第4个包 - 客户端发送数据
+12:00:00.000300 IP 192.168.1.100.54321 > 192.168.1.1.8888:
+  Flags [P.], seq 1001:1101, ack 2001, win 65535, length 100
+
+  解读:
+  - Flags [P.]: PSH=1, ACK=1
+  - seq 1001:1101: 发送100字节，占用序列号1001-1100
+  - ack 2001: 仍然确认2001
+  - length 100: 携带100字节数据
+```
+
+**使用wireshark查看**：
+```
+打开wireshark后，过滤器输入: tcp.port == 8888
+
+三次握手在wireshark中的显示：
+┌─────────┬──────┬──────────────┬───────────────┐
+│ No.     │ Info │ Seq          │ Ack           │
+├─────────┼──────┼──────────────┼───────────────┤
+│ 1       │ SYN  │ seq=0 (rel)  │               │
+│         │      │ seq=1000(abs)│               │
+├─────────┼──────┼──────────────┼───────────────┤
+│ 2       │SYN,  │ seq=0 (rel)  │ ack=1 (rel)   │
+│         │ ACK  │ seq=2000(abs)│ ack=1001(abs) │
+├─────────┼──────┼──────────────┼───────────────┤
+│ 3       │ ACK  │ seq=1 (rel)  │ ack=1 (rel)   │
+│         │      │ seq=1001(abs)│ ack=2001(abs) │
+└─────────┴──────┴──────────────┴───────────────┘
+
+注: wireshark默认显示相对序列号，从0开始更易读
+    可以右键 → Protocol Preferences → 取消"Relative sequence numbers"
+    查看绝对序列号
+```
+
+---
 
 ### 8.1 完整的三次握手流程
 

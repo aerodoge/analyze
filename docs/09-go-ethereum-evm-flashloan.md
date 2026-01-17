@@ -22,28 +22,28 @@
 │                                                                 │
 │  闪电贷 = 在一个交易内借款并还款的无抵押贷款                           │
 │                                                                 │
-│  核心特性：                                                     │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  1. 原子性：借款和还款必须在同一交易内完成                    │   │
-│  │  2. 无抵押：不需要任何抵押品                                │   │
-│  │  3. 无风险（对贷方）：不还款则整个交易回滚                    │   │
-│  │  4. 即时：无需等待，立即可用                                │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│  核心特性：                                                       │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  1. 原子性：借款和还款必须在同一交易内完成                    │     │
+│  │  2. 无抵押：不需要任何抵押品                                │    │
+│  │  3. 无风险（对贷方）：不还款则整个交易回滚                    │     │
+│  │  4. 即时：无需等待，立即可用                                │    │
+│  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
-│  交易流程：                                                     │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                                                         │   │
-│  │  ┌──────┐    ┌──────┐    ┌──────┐    ┌──────┐           │   │
-│  │  │ 借款 │───▶ │ 使用 │───▶ │ 获利 │───▶│ 还款 │           │   │
-│  │  │ 100  │    │资金做 │    │      │    │100+  │           │   │
-│  │  │ ETH  │    │ 套利  │    │      │    │ 手续费│          │   │
-│  │  └──────┘    └──────┘    └──────┘    └──────┘          │   │
-│  │      │                                   │              │   │
-│  │      └────────── 同一交易 ────────────────┘              │   │
-│  │                                                         │   │
-│  │  如果还款失败 → 整个交易回滚 → 借款从未发生                   │   │
-│  │                                                         │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│  交易流程：                                                       │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                                                         │    │
+│  │  ┌──────┐     ┌──────┐      ┌──────┐    ┌──────┐        │    │
+│  │  │ 借款  │───▶ │ 使用  │───▶ │ 获利  │───▶│ 还款  │        │    │
+│  │  │ 100  │     │资金做 │     │       │    │100+  │        │    │
+│  │  │ ETH  │     │ 套利  │     │      │     │ 手续费│        │    │
+│  │  └──────┘     └──────┘     └──────┘     └──────┘        │    │
+│  │      │                                   │              │    │
+│  │      └────────── 同一交易 ────────────────┘              │    │
+│  │                                                         │    │
+│  │  如果还款失败 → 整个交易回滚 → 借款从未发生                   │    │
+│  │                                                         │    │
+│  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -52,34 +52,34 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    闪电贷工作原理                                │
+│                    闪电贷工作原理                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  EVM 原子性保证：                                               │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                                                          │   │
-│  │  function flashLoan(amount) {                           │   │
-│  │      // 1. 记录初始余额                                  │   │
-│  │      uint256 balanceBefore = token.balanceOf(this);     │   │
-│  │                                                          │   │
-│  │      // 2. 转账给借款人                                  │   │
-│  │      token.transfer(borrower, amount);                  │   │
-│  │                                                          │   │
-│  │      // 3. 调用借款人的回调函数                          │   │
-│  │      borrower.executeOperation(amount, fee, params);    │   │
-│  │                                                          │   │
-│  │      // 4. 检查还款（核心！）                            │   │
-│  │      uint256 balanceAfter = token.balanceOf(this);      │   │
-│  │      require(balanceAfter >= balanceBefore + fee);      │   │
-│  │      // 如果检查失败，整个交易 revert                    │   │
-│  │  }                                                       │   │
-│  │                                                          │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│  EVM 原子性保证：                                                 │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                                                         │    │
+│  │  function flashLoan(amount) {                           │    │
+│  │      // 1. 记录初始余额                                   │    │
+│  │      uint256 balanceBefore = token.balanceOf(this);     │    │
+│  │                                                         │    │
+│  │      // 2. 转账给借款人                                   │    │
+│  │      token.transfer(borrower, amount);                  │    │
+│  │                                                         │    │
+│  │      // 3. 调用借款人的回调函数                            │    │
+│  │      borrower.executeOperation(amount, fee, params);    │    │
+│  │                                                         │    │
+│  │      // 4. 检查还款（核心！）                              │    │
+│  │      uint256 balanceAfter = token.balanceOf(this);      │    │
+│  │      require(balanceAfter >= balanceBefore + fee);      │    │
+│  │      // 如果检查失败，整个交易 revert                       │    │
+│  │  }                                                      │    │
+│  │                                                         │    │
+│  └─────────────────────────────────────────────────────────┘    │ 
 │                                                                 │
-│  关键点：                                                       │
-│  • 在回调函数中，借款人可以做任何事情                          │
-│  • 只要最后余额检查通过，交易就成功                            │
-│  • 如果余额不够，require 失败，所有状态回滚                    │
+│  关键点：                                                        │
+│  • 在回调函数中，借款人可以做任何事情                                │
+│  • 只要最后余额检查通过，交易就成功                                  │
+│  • 如果余额不够，require 失败，所有状态回滚                          │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -94,33 +94,33 @@
 │  1. 套利（Arbitrage）                                            │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │  借款 ──▶ 低价买入 ──▶ 高价卖出 ──▶ 还款 + 利润              │    │
-│  │  无需本金，利用价格差异获利                                  │   │
+│  │  无需本金，利用价格差异获利                                 │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
 │  2. 清算（Liquidation）                                          │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │  借款 ──▶ 偿还不良贷款 ──▶ 获得抵押品 ──▶ 卖出还款            │   │
-│  │  无需持有债务代币，获取清算奖励                              │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│  │  借款 ──▶ 偿还不良贷款 ──▶ 获得抵押品 ──▶ 卖出还款            │    │
+│  │  无需持有债务代币，获取清算奖励                              │    │
+│  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
 │  3. 抵押品置换（Collateral Swap）                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  借款 ──▶ 还清贷款 ──▶ 取出抵押品 ──▶ 换新抵押品              │   │
-│  │       ──▶ 重新借贷 ──▶ 还闪电贷                            │   │
-│  │  一笔交易完成抵押品更换                                     │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                │
-│  4. 杠杆调整（Leverage Adjustment）                              │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  增加杠杆：借款 ──▶ 买入更多抵押品 ──▶ 存入 ──▶ 借出还款       │   │
-│  │  减少杠杆：借款 ──▶ 还部分贷款 ──▶ 取出抵押品 ──▶ 卖出还款     │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                │
-│  5. 自清算（Self-Liquidation）                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  借款 ──▶ 还清贷款 ──▶ 取出抵押品 ──▶ 卖出还款               │   │
-│  │  避免被他人清算损失清算罚金                                 │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  借款 ──▶ 还清贷款 ──▶ 取出抵押品 ──▶ 换新抵押品              │    │
+│  │       ──▶ 重新借贷 ──▶ 还闪电贷                            │    │
+│  │  一笔交易完成抵押品更换                                     │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  4. 杠杆调整（Leverage Adjustment）                               │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  增加杠杆：借款 ──▶ 买入更多抵押品 ──▶ 存入 ──▶ 借出还款       │    │
+│  │  减少杠杆：借款 ──▶ 还部分贷款 ──▶ 取出抵押品 ──▶ 卖出还款     │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  5. 自清算（Self-Liquidation）                                    │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  借款 ──▶ 还清贷款 ──▶ 取出抵押品 ──▶ 卖出还款               │    │
+│  │  避免被他人清算损失清算罚金                                 │    │
+│  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -136,36 +136,36 @@
 
 // IPool 接口
 type AavePool interface {
-// 简单闪电贷（单资产）
-FlashLoanSimple(
-receiverAddress common.Address,
-asset common.Address,
-amount *big.Int,
-params []byte,
-referralCode uint16,
-) error
+    // 简单闪电贷（单资产）
+    FlashLoanSimple(
+        receiverAddress common.Address,
+        asset common.Address,
+        amount *big.Int,
+        params []byte,
+        referralCode uint16,
+    ) error
 
-// 多资产闪电贷
-FlashLoan(
-receiverAddress common.Address,
-assets []common.Address,
-amounts []*big.Int,
-interestRateModes []*big.Int, // 0=不借款, 1=稳定利率, 2=浮动利率
-onBehalfOf common.Address,
-params []byte,
-referralCode uint16,
-) error
+    // 多资产闪电贷
+    FlashLoan(
+        receiverAddress common.Address,
+        assets []common.Address,
+        amounts []*big.Int,
+        interestRateModes []*big.Int, // 0=不借款, 1=稳定利率, 2=浮动利率
+        onBehalfOf common.Address,
+        params []byte,
+        referralCode uint16,
+    ) error
 }
 
 // IFlashLoanSimpleReceiver 回调接口
 type IFlashLoanSimpleReceiver interface {
-ExecuteOperation(
-asset common.Address,
-amount *big.Int,
-premium *big.Int, // 手续费
-initiator common.Address,
-params []byte,
-) (bool, error)
+    ExecuteOperation(
+        asset common.Address,
+        amount *big.Int,
+        premium *big.Int, // 手续费
+        initiator common.Address,
+        params []byte,
+    ) (bool, error)
 }
 
 // Aave V3 闪电贷费用
@@ -173,46 +173,46 @@ const AaveV3FlashLoanFee = 5 // 0.05% (5 basis points)
 
 // Aave V3 闪电贷合约地址（主网）
 var (
-AaveV3Pool = common.HexToAddress("0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2")
-AaveV3PoolDataProvider = common.HexToAddress("0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3")
+    AaveV3Pool = common.HexToAddress("0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2")
+    AaveV3PoolDataProvider = common.HexToAddress("0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3")
 )
 
 // 实现 Aave 闪电贷接收器
 type AaveFlashLoanReceiver struct {
-pool      common.Address
-initiator common.Address
+    pool      common.Address
+    initiator common.Address
 }
 
 // ExecuteOperation Aave 回调函数
 func (r *AaveFlashLoanReceiver) ExecuteOperation(
-asset common.Address,
-amount *big.Int,
-premium *big.Int,
-initiator common.Address,
-params []byte,
+    asset common.Address,
+    amount *big.Int,
+    premium *big.Int,
+    initiator common.Address,
+    params []byte,
 ) (bool, error) {
-// 验证调用者
-// require(msg.sender == pool)
-// require(initiator == r.initiator)
-
-// ============================================
-// 在这里执行套利/清算等操作
-// ============================================
-
-// 例如：DEX 套利
-profit, err := r.executeArbitrage(asset, amount, params)
-if err != nil {
-return false, err
-}
-
-// 计算还款金额
-amountOwed := new(big.Int).Add(amount, premium)
-
-// 确保有足够余额还款
-// 需要先 approve 给 Pool
-// token.approve(pool, amountOwed)
-
-return true, nil
+    // 验证调用者
+    // require(msg.sender == pool)
+    // require(initiator == r.initiator)
+    
+    // ============================================
+    // 在这里执行套利/清算等操作
+    // ============================================
+    
+    // 例如：DEX 套利
+    profit, err := r.executeArbitrage(asset, amount, params)
+    if err != nil {
+        return false, err
+    }
+    
+    // 计算还款金额
+    amountOwed := new(big.Int).Add(amount, premium)
+    
+    // 确保有足够余额还款
+    // 需要先 approve 给 Pool
+    // token.approve(pool, amountOwed)
+    
+    return true, nil
 }
 
 // Solidity 合约示例
@@ -271,12 +271,12 @@ contract MyFlashLoanReceiver is FlashLoanSimpleReceiverBase {
 
 // IUniswapV2Callee 回调接口
 type IUniswapV2Callee interface {
-UniswapV2Call(
-sender common.Address,
-amount0 *big.Int,
-amount1 *big.Int,
-data []byte,
-)
+    UniswapV2Call(
+        sender common.Address,
+        amount0 *big.Int,
+        amount1 *big.Int,
+        data []byte,
+    )
 }
 
 // Uniswap V2 闪电贷原理
@@ -301,28 +301,28 @@ data []byte,
 
 // Uniswap V2 闪电贷实现
 type UniswapV2FlashSwap struct {
-factory common.Address
-weth    common.Address
+    factory common.Address
+    weth    common.Address
 }
 
 // UniswapV2Call 回调函数
 func (u *UniswapV2FlashSwap) UniswapV2Call(
-sender common.Address,
-amount0 *big.Int,
-amount1 *big.Int,
-data []byte,
+    sender common.Address,
+    amount0 *big.Int,
+    amount1 *big.Int,
+    data []byte,
 ) {
-// 1. 解析调用数据
-// 确定借入的是哪个代币
-
-// 2. 执行套利操作
-// ...
-
-// 3. 计算还款金额（考虑 0.3% 手续费）
-// amountRequired = (amountBorrowed * 1000) / 997 + 1
-// 或者用另一个代币还款
-
-// 4. 转账还款
+    // 1. 解析调用数据
+    // 确定借入的是哪个代币
+    
+    // 2. 执行套利操作
+    // ...
+    
+    // 3. 计算还款金额（考虑 0.3% 手续费）
+    // amountRequired = (amountBorrowed * 1000) / 997 + 1
+    // 或者用另一个代币还款
+    
+    // 4. 转账还款
 }
 
 // Uniswap V2 闪电贷的特点
@@ -339,21 +339,12 @@ data []byte,
 
 // Uniswap V3 Flash
 type IUniswapV3Pool interface {
-Flash(
-recipient common.Address,
-amount0 *big.Int,
-amount1 *big.Int,
-data []byte,
-) error
+    Flash(recipient common.Address, amount0 *big.Int, amount1 *big.Int, data []byte) error
 }
 
 // IUniswapV3FlashCallback 回调接口
 type IUniswapV3FlashCallback interface {
-UniswapV3FlashCallback(
-fee0 *big.Int,
-fee1 *big.Int,
-data []byte,
-)
+    UniswapV3FlashCallback(fee0 *big.Int, fee1 *big.Int, data []byte)
 }
 
 // V3 闪电贷 Solidity 示例
@@ -404,22 +395,22 @@ contract UniswapV3Flash is IUniswapV3FlashCallback {
 
 // IBalancerVault 接口
 type IBalancerVault interface {
-FlashLoan(
-recipient IFlashLoanRecipient,
-tokens []common.Address,
-amounts []*big.Int,
-userData []byte,
-) error
+    FlashLoan(
+        recipient IFlashLoanRecipient,
+        tokens []common.Address,
+        amounts []*big.Int,
+        userData []byte,
+    ) error
 }
 
 // IFlashLoanRecipient 回调接口
 type IFlashLoanRecipient interface {
-ReceiveFlashLoan(
-tokens []common.Address,
-amounts []*big.Int,
-feeAmounts []*big.Int,
-userData []byte,
-)
+    ReceiveFlashLoan(
+        tokens []common.Address,
+        amounts []*big.Int,
+        feeAmounts []*big.Int,
+        userData []byte,
+    )
 }
 
 // Balancer Vault 地址（所有链相同）
@@ -481,11 +472,11 @@ contract BalancerFlashLoan is IFlashLoanRecipient {
 
 // 比较各协议闪电贷
 type FlashLoanComparison struct {
-Protocol    string
-Fee         string
-MaxAmount   string
-MultiAsset  bool
-Notes       string
+    Protocol    string
+    Fee         string
+    MaxAmount   string
+    MultiAsset  bool
+    Notes       string
 }
 
 var FlashLoanProviders = []FlashLoanComparison{
@@ -507,111 +498,111 @@ var FlashLoanProviders = []FlashLoanComparison{
 ```go
 // FlashLoanArbitrage 闪电贷套利
 type FlashLoanArbitrage struct {
-// 闪电贷提供者
-aavePool    common.Address
-balancerVault common.Address
-
-// DEX 路由器
-uniswapRouter  common.Address
-sushiRouter    common.Address
-
-// 配置
-minProfit   *big.Int
-maxGasPrice *big.Int
-
-client *ethclient.Client
+    // 闪电贷提供者
+    aavePool    common.Address
+    balancerVault common.Address
+    
+    // DEX 路由器
+    uniswapRouter  common.Address
+    sushiRouter    common.Address
+    
+    // 配置
+    minProfit   *big.Int
+    maxGasPrice *big.Int
+    
+    client *ethclient.Client
 }
 
 // ArbitrageParams 套利参数
 type ArbitrageParams struct {
-// 借款信息
-LoanToken   common.Address
-LoanAmount  *big.Int
-LoanProvider string // "aave", "balancer", "uniswap"
-
-// 套利路径
-BuyDex      string
-SellDex     string
-BuyPath     []common.Address
-SellPath    []common.Address
-
-// 预期结果
-ExpectedProfit *big.Int
-MaxSlippage    uint64 // basis points
+    // 借款信息
+    LoanToken   common.Address
+    LoanAmount  *big.Int
+    LoanProvider string // "aave", "balancer", "uniswap"
+    
+    // 套利路径
+    BuyDex      string
+    SellDex     string
+    BuyPath     []common.Address
+    SellPath    []common.Address
+    
+    // 预期结果
+    ExpectedProfit *big.Int
+    MaxSlippage    uint64 // basis points
 }
 
 // ExecuteArbitrage 执行套利
 func (f *FlashLoanArbitrage) ExecuteArbitrage(ctx context.Context, params *ArbitrageParams) (*types.Transaction, error) {
-// 1. 验证套利机会仍然存在
-currentProfit, err := f.simulateArbitrage(params)
-if err != nil {
-return nil, fmt.Errorf("simulation failed: %w", err)
-}
-if currentProfit.Cmp(f.minProfit) < 0 {
-return nil, fmt.Errorf("profit too low: %s", currentProfit.String())
-}
-
-// 2. 构建套利合约调用数据
-callData, err := f.buildArbitrageCalldata(params)
-if err != nil {
-return nil, err
-}
-
-// 3. 估算 Gas
-gasLimit, err := f.estimateGas(callData)
-if err != nil {
-return nil, err
-}
-
-// 4. 构建并发送交易
-tx, err := f.sendTransaction(ctx, callData, gasLimit)
-if err != nil {
-return nil, err
-}
-
-return tx, nil
+    // 1. 验证套利机会仍然存在
+    currentProfit, err := f.simulateArbitrage(params)
+    if err != nil {
+        return nil, fmt.Errorf("simulation failed: %w", err)
+    }
+    if currentProfit.Cmp(f.minProfit) < 0 {
+        return nil, fmt.Errorf("profit too low: %s", currentProfit.String())
+    }
+    
+    // 2. 构建套利合约调用数据
+    callData, err := f.buildArbitrageCalldata(params)
+    if err != nil {
+        return nil, err
+    }
+    
+    // 3. 估算 Gas
+    gasLimit, err := f.estimateGas(callData)
+    if err != nil {
+        return nil, err
+    }
+    
+    // 4. 构建并发送交易
+    tx, err := f.sendTransaction(ctx, callData, gasLimit)
+    if err != nil {
+        return nil, err
+    }
+    
+    return tx, nil
 }
 
 // simulateArbitrage 模拟套利
 func (f *FlashLoanArbitrage) simulateArbitrage(params *ArbitrageParams) (*big.Int, error) {
-// 模拟完整的套利流程
-
-// 1. 计算在 BuyDex 的输出
-buyOutput, err := f.getAmountOut(params.BuyDex, params.LoanAmount, params.BuyPath)
-if err != nil {
-return nil, err
-}
-
-// 2. 计算在 SellDex 的输出
-sellOutput, err := f.getAmountOut(params.SellDex, buyOutput, params.SellPath)
-if err != nil {
-return nil, err
-}
-
-// 3. 计算闪电贷费用
-fee := f.calculateFlashLoanFee(params.LoanProvider, params.LoanAmount)
-
-// 4. 计算净利润
-// profit = sellOutput - loanAmount - fee
-profit := new(big.Int).Sub(sellOutput, params.LoanAmount)
-profit.Sub(profit, fee)
-
-return profit, nil
+    // 模拟完整的套利流程
+    
+    // 1. 计算在 BuyDex 的输出
+    buyOutput, err := f.getAmountOut(params.BuyDex, params.LoanAmount, params.BuyPath)
+    if err != nil {
+        return nil, err
+    }
+    
+    // 2. 计算在 SellDex 的输出
+    sellOutput, err := f.getAmountOut(params.SellDex, buyOutput, params.SellPath)
+    if err != nil {
+        return nil, err
+    }
+    
+    // 3. 计算闪电贷费用
+    fee := f.calculateFlashLoanFee(params.LoanProvider, params.LoanAmount)
+    
+    // 4. 计算净利润
+    // profit = sellOutput - loanAmount - fee
+    profit := new(big.Int).Sub(sellOutput, params.LoanAmount)
+    profit.Sub(profit, fee)
+    
+    return profit, nil
 }
 
 // buildArbitrageCalldata 构建套利调用数据
 func (f *FlashLoanArbitrage) buildArbitrageCalldata(params *ArbitrageParams) ([]byte, error) {
-// 编码套利参数，传递给闪电贷回调
-innerParams := encodeArbitrageParams(params)
-
-switch params.LoanProvider {
-case "balancer":
-return f.buildBalancerFlashLoan(params.LoanToken, params.LoanAmount, innerParams)
-case "aave":
-return f.buildAaveFlashLoan(params.LoanToken, params.LoanAmount, innerParams)
-default:
-return nil, fmt.Errorf("unknown loan provider: %s", params.LoanProvider)
-}
+    // 编码套利参数，传递给闪电贷回调
+    innerParams := encodeArbitrageParams(params)
+    
+    switch params.LoanProvider {
+        case "balancer":
+            return f.buildBalancerFlashLoan(params.LoanToken, params.LoanAmount, innerParams)
+        case "aave":
+            return f.buildAaveFlashLoan(params.LoanToken, params.LoanAmount, innerParams)
+        default:
+            return nil, fmt.Errorf("unknown loan provider: %s", params.LoanProvider)
+    }
 }
 ```
 
